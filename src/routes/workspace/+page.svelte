@@ -63,6 +63,7 @@
 				file={explorer.current}
 				followHistory
 				theme="vitesse-dark"
+				themes={['vitesse-dark', 'vitesse-light']}
 				class="demo-editor"
 			/>
 		</div>

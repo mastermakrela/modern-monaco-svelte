@@ -1,3 +1,4 @@
+import type { Workspace } from 'modern-monaco';
 import type { InitOptions, Monaco } from './types.js';
 
 /**
@@ -50,6 +51,32 @@ interface AppliedState {
 	options: InitOptions;
 }
 
+/** Workspaces already wired to a monaco instance (via init or attachWorkspace). */
+const attachedWorkspaces = new WeakSet<object>();
+
+/**
+ * Wires a workspace to an already-initialized monaco instance, so editors
+ * mounting after init (e.g. on SPA navigation) can still use it. No-op for
+ * workspaces that went through `init()` or were attached before.
+ *
+ * Compared to passing the workspace to the first `init()`, late attachment
+ * skips the LSP integration (filesystem-aware import completions) — prefer
+ * `preloadMonaco({ workspace })` early when you need that.
+ */
+export function attachWorkspace(workspace: Workspace, monaco: Monaco): void {
+	if (attachedWorkspaces.has(workspace)) return;
+	attachedWorkspaces.add(workspace);
+	const candidate = workspace as unknown as { setupMonaco?: (monaco: Monaco) => void };
+	if (typeof candidate.setupMonaco === 'function') {
+		candidate.setupMonaco(monaco);
+	} else {
+		console.error(
+			'[modern-monaco-svelte] Unable to attach the workspace after init: workspace.setupMonaco() is missing ' +
+				'(modern-monaco internals changed). Register the workspace before the first editor mounts via preloadMonaco({ workspace }).'
+		);
+	}
+}
+
 /**
  * Builds a page-global once-only initializer: options from every caller that
  * registers before the modern-monaco module finishes loading are merged into
@@ -57,7 +84,8 @@ interface AppliedState {
  * ignored with a warning.
  */
 function createInitSingleton<T>(
-	run: (mod: typeof import('modern-monaco'), merged: InitOptions) => T | Promise<T>
+	run: (mod: typeof import('modern-monaco'), merged: InitOptions) => T | Promise<T>,
+	{ handlesLateWorkspace = false }: { handlesLateWorkspace?: boolean } = {}
 ): (options?: InitOptions) => Promise<T> {
 	let promise: Promise<T> | null = null;
 	let pending: InitOptions[] = [];
@@ -79,7 +107,11 @@ function createInitSingleton<T>(
 			if (key === null || !applied.themes.has(key)) return true;
 		}
 		if (options.cdn !== undefined && options.cdn !== applied.options.cdn) return true;
-		if (options.workspace !== undefined && options.workspace !== applied.options.workspace) {
+		if (
+			!handlesLateWorkspace &&
+			options.workspace !== undefined &&
+			options.workspace !== applied.options.workspace
+		) {
 			return true;
 		}
 		if (options.lsp !== undefined && options.lsp !== applied.options.lsp) return true;
@@ -118,6 +150,8 @@ function createInitSingleton<T>(
 				langs: new Set((merged.langs ?? []).map(stringKey).filter((key) => key !== null)),
 				options: merged
 			};
+			// init() wires its workspace itself — don't re-attach it later
+			if (merged.workspace) attachedWorkspaces.add(merged.workspace);
 
 			return run(mod, merged);
 		})();
@@ -136,7 +170,9 @@ function createInitSingleton<T>(
  * register every theme your app switches between.
  */
 export const preloadMonaco: (options?: InitOptions) => Promise<Monaco> = createInitSingleton(
-	(mod, merged) => mod.init(merged)
+	(mod, merged) => mod.init(merged),
+	// a workspace arriving after init is attached via attachWorkspace()
+	{ handlesLateWorkspace: true }
 );
 
 /**

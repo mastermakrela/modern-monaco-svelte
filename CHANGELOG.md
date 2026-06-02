@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-06-02
+
+### Fixed
+
+- Workspace-backed editors now work when mounted **after** monaco was already initialized (e.g. after SPA navigation from a page with a plain editor). Previously the workspace was silently dropped — `openTextDocument()` never resolved and the editor stayed empty — with a spurious "Monaco is already initialized" console warning. The new `attachWorkspace()` (exported, used automatically by `MonacoEditor`) wires the workspace into the running monaco instance; note that late attachment skips the LSP filesystem integration — call `preloadMonaco({ workspace })` early if you need import completions.
+- Opening a file from a freshly constructed workspace no longer races the asynchronous `initialFiles` IndexedDB seeding (bounded not-found retry).
+- File opens are serialized, target the owning editor explicitly (instead of upstream's focused-editor guess — relevant for multi-editor layouts), and no longer log errors when interrupted by unmount.
+
 ## [0.2.0] - 2026-06-02
 
 ### Added

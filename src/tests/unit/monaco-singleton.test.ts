@@ -86,6 +86,61 @@ describe('preloadMonaco', () => {
 
 		expect(warn).not.toHaveBeenCalled();
 	});
+
+	it('does not warn when a workspace arrives after init (handled via attachWorkspace)', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const { preloadMonaco } = await loadModule();
+		await preloadMonaco();
+
+		const workspace = { setupMonaco: vi.fn() };
+		await preloadMonaco({ workspace } as never);
+
+		expect(warn).not.toHaveBeenCalled();
+	});
+});
+
+describe('attachWorkspace', () => {
+	beforeEach(() => {
+		initMock.mockClear();
+		vi.stubGlobal('window', {});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	it('wires a late workspace exactly once', async () => {
+		const { attachWorkspace, preloadMonaco } = await loadModule();
+		const monaco = await preloadMonaco();
+		const workspace = { setupMonaco: vi.fn() };
+
+		attachWorkspace(workspace as never, monaco);
+		attachWorkspace(workspace as never, monaco);
+
+		expect(workspace.setupMonaco).toHaveBeenCalledTimes(1);
+		expect(workspace.setupMonaco).toHaveBeenCalledWith(monaco);
+	});
+
+	it('does not re-attach a workspace that went through init', async () => {
+		const { attachWorkspace, preloadMonaco } = await loadModule();
+		const workspace = { setupMonaco: vi.fn() };
+		const monaco = await preloadMonaco({ workspace } as never);
+
+		attachWorkspace(workspace as never, monaco);
+
+		expect(workspace.setupMonaco).not.toHaveBeenCalled();
+	});
+
+	it('reports when the upstream attachment hook is missing', async () => {
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const { attachWorkspace, preloadMonaco } = await loadModule();
+		const monaco = await preloadMonaco();
+
+		attachWorkspace({} as never, monaco);
+
+		expect(error).toHaveBeenCalledWith(expect.stringContaining('setupMonaco'));
+	});
 });
 
 describe('ensureLazyEditor', () => {
@@ -129,6 +184,16 @@ describe('ensureLazyEditor', () => {
 		await ensureLazyEditor({ themes: ['too-late'] });
 		expect(warn).toHaveBeenCalledWith(expect.stringContaining('already initialized'));
 		expect(lazyMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('still warns on a late workspace (lazy mode cannot attach late)', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const { ensureLazyEditor } = await loadModule();
+		await ensureLazyEditor();
+
+		await ensureLazyEditor({ workspace: { setupMonaco: vi.fn() } } as never);
+
+		expect(warn).toHaveBeenCalledWith(expect.stringContaining('already initialized'));
 	});
 });
 

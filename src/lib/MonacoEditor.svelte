@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Workspace } from 'modern-monaco';
 	import { onMount, type Snippet } from 'svelte';
-	import { preloadMonaco } from './monaco.js';
+	import { attachWorkspace, preloadMonaco } from './monaco.js';
 	import { workspacePath } from './workspace.svelte.js';
 	import type { EditorOptions, InitOptions, Monaco, MonacoCodeEditor } from './types.js';
 
@@ -94,6 +94,9 @@
 
 			const m = await preloadMonaco(initOptions);
 			if (disposed || !container) return;
+			// wires the workspace even when init already ran without it
+			// (e.g. this editor mounted after SPA navigation)
+			if (workspace) attachWorkspace(workspace, m);
 			monaco = m;
 
 			const created = m.editor.create(
@@ -150,35 +153,61 @@
 		};
 	});
 
-	// Open the requested workspace file (reactive on `file`).
+	// Open the requested workspace file (reactive on `file`). Opens are
+	// serialized so rapid switches settle on the last requested file.
+	let openQueue: Promise<void> = Promise.resolve();
 	$effect(() => {
 		const target = file;
 		if (monaco && editor && workspace && target) {
-			void openFile(workspace, editor, target);
+			const ws = workspace;
+			const ed = editor;
+			openQueue = openQueue.then(() =>
+				openFile(ws, ed, target).catch((error) => {
+					// opens interrupted by unmount are expected noise
+					if (!disposed) {
+						console.error(`[modern-monaco-svelte] failed to open "${target}":`, error);
+					}
+				})
+			);
 		}
 	});
 
 	async function openFile(ws: Workspace, ed: MonacoCodeEditor, path: string) {
-		const model = await ws.openTextDocument(path);
-		// bail if the editor went away or the target changed while loading
-		if (disposed || file !== path || ed.getModel() === model) return;
-
+		// stale request (file changed again while queued) or already open
+		if (disposed || file !== path) return;
 		const previous = ed.getModel();
+		if (previous && workspacePath(previous.uri.toString()) === path) return;
+
+		// save the outgoing file's cursor/scroll state
 		if (previous && previous.uri.scheme === 'file') {
 			const state = ed.saveViewState();
 			if (state) void ws.viewState.save(previous.uri.toString(), state);
 		}
 
-		ed.setModel(model);
-
-		const state = await ws.viewState.get(model.uri.toString());
-		if (!disposed && state && ed.getModel() === model) {
-			ed.restoreViewState(state);
+		// sets the model on this editor and restores its view state;
+		// retry briefly on not-found — a freshly constructed workspace seeds
+		// `initialFiles` into IndexedDB asynchronously
+		for (let attempt = 0; ; attempt++) {
+			try {
+				await ws.openTextDocument(path, undefined, ed);
+				break;
+			} catch (error) {
+				if (attempt >= 4 || !isNotFound(error)) throw error;
+				await new Promise((resolve) => setTimeout(resolve, 150));
+				if (disposed || file !== path) return;
+			}
 		}
 
-		if (followHistory && workspacePath(ws.history.state.current ?? '') !== path) {
+		if (followHistory && !disposed && workspacePath(ws.history.state.current ?? '') !== path) {
 			ws.history.push(path);
 		}
+	}
+
+	function isNotFound(error: unknown): boolean {
+		return (
+			error instanceof Error &&
+			(error.constructor.name === 'NotFoundError' || error.message.includes('No such file'))
+		);
 	}
 
 	// Follow workspace history navigation (back/forward/push).
