@@ -3,6 +3,7 @@
 	import type { Workspace } from 'modern-monaco';
 	import { lazyOptionsScript } from './lazy-options.js';
 	import { ensureLazyEditor } from './monaco.js';
+	import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME, resolveTheme } from './theme.svelte.js';
 	import type { EditorOptions, InitOptions } from './types.js';
 
 	interface Props {
@@ -24,8 +25,16 @@
 		filename?: string;
 		/** Language id (ignored when `filename` implies one). */
 		language?: string;
-		/** Theme for this editor (must be loadable at init time). */
+		/**
+		 * Theme for this editor. When omitted, the system's
+		 * `prefers-color-scheme` picks between `themeLight`/`themeDark` at
+		 * mount — lazy mode cannot switch themes later (no editor handle).
+		 */
 		theme?: string;
+		/** Theme used when the system prefers light (no explicit `theme`). */
+		themeLight?: string;
+		/** Theme used when the system prefers dark (no explicit `theme`). */
+		themeDark?: string;
 		/** Monaco editor options applied by the `<monaco-editor>` element. */
 		options?: EditorOptions;
 		/**
@@ -54,6 +63,8 @@
 		filename,
 		language,
 		theme,
+		themeLight = DEFAULT_LIGHT_THEME,
+		themeDark = DEFAULT_DARK_THEME,
 		options = {},
 		init,
 		workspace,
@@ -61,10 +72,12 @@
 		class: className = ''
 	}: Props = $props();
 
+	const resolvedTheme = $derived(resolveTheme(theme, themeLight, themeDark));
+
 	const scriptHtml = $derived(
 		lazyOptionsScript(filename ? { filename, code: value } : value, {
 			...(language ? { language } : {}),
-			...(theme ? { theme } : {}),
+			theme: resolvedTheme,
 			...options
 		})
 	);

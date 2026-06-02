@@ -58,14 +58,8 @@
 				</div>
 			</aside>
 
-			<MonacoEditor
-				{workspace}
-				file={explorer.current}
-				followHistory
-				theme="vitesse-dark"
-				themes={['vitesse-dark', 'vitesse-light']}
-				class="demo-editor"
-			/>
+			<!-- no theme prop: follows the system's prefers-color-scheme -->
+			<MonacoEditor {workspace} file={explorer.current} followHistory class="demo-editor" />
 		</div>
 	{/if}
 </main>

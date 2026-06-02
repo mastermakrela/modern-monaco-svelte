@@ -15,10 +15,10 @@
 	<LazyMonacoEditor html={data.editorHtml} class="demo-editor" />
 
 	<h2>Client-side lazy mode (embedded code)</h2>
+	<!-- no theme prop: picks light/dark from the system at mount -->
 	<LazyMonacoEditor
 		value={`console.log("loaded lazily, no SSR");` + '\n'}
 		language="javascript"
-		theme="vitesse-dark"
 		class="demo-editor"
 	/>
 </main>

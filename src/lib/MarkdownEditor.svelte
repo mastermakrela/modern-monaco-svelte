@@ -18,8 +18,15 @@
 	interface Props {
 		/** Editor content — supports `bind:value`. */
 		value?: string;
-		/** Active theme (reactive). Register every theme you switch between via `themes`. */
+		/**
+		 * Active theme (reactive). When omitted, follows the system's
+		 * `prefers-color-scheme` using `themeLight`/`themeDark`.
+		 */
 		theme?: string;
+		/** Theme used when the system prefers light (no explicit `theme`). */
+		themeLight?: string;
+		/** Theme used when the system prefers dark (no explicit `theme`). */
+		themeDark?: string;
 		/** Additional themes to register at init. */
 		themes?: string[];
 		/** Monaco editor options — merged over the markdown-friendly defaults. */
@@ -55,6 +62,8 @@
 	let {
 		value = $bindable(''),
 		theme,
+		themeLight,
+		themeDark,
 		themes = [],
 		options = {},
 		init,
@@ -94,6 +103,8 @@
 	bind:file
 	language="markdown"
 	{theme}
+	{themeLight}
+	{themeDark}
 	{themes}
 	{init}
 	{workspace}

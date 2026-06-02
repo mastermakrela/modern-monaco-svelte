@@ -49,7 +49,8 @@ describe('preloadMonaco', () => {
 
 		expect(initMock).toHaveBeenCalledTimes(1);
 		expect(initMock).toHaveBeenCalledWith({
-			themes: ['rose-pine-dawn', 'rose-pine-moon'],
+			// caller themes first, then the always-registered default pair
+			themes: ['rose-pine-dawn', 'rose-pine-moon', 'vitesse-dark', 'vitesse-light'],
 			defaultTheme: 'rose-pine-dawn'
 		});
 	});
@@ -63,7 +64,21 @@ describe('preloadMonaco', () => {
 
 		expect(warn).toHaveBeenCalledWith(expect.stringContaining('already initialized'));
 		expect(initMock).toHaveBeenCalledTimes(1);
-		expect(initMock).toHaveBeenCalledWith({ themes: ['rose-pine-dawn'] });
+		expect(initMock).toHaveBeenCalledWith({
+			themes: ['rose-pine-dawn', 'vitesse-dark', 'vitesse-light']
+		});
+	});
+
+	it('registers the default light/dark pair even without options', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const { preloadMonaco } = await loadModule();
+		await preloadMonaco();
+
+		expect(initMock).toHaveBeenCalledWith({ themes: ['vitesse-dark', 'vitesse-light'] });
+
+		// an editor following prefers-color-scheme can mount late without noise
+		await preloadMonaco({ themes: ['vitesse-light', 'vitesse-dark'] });
+		expect(warn).not.toHaveBeenCalled();
 	});
 
 	it('stays silent when late options are already covered by init', async () => {
@@ -169,7 +184,8 @@ describe('ensureLazyEditor', () => {
 		await preloadMonaco({ themes: ['a'] });
 		await ensureLazyEditor({ themes: ['b'] });
 
-		expect(initMock).toHaveBeenCalledWith({ themes: ['a'] });
+		expect(initMock).toHaveBeenCalledWith({ themes: ['a', 'vitesse-dark', 'vitesse-light'] });
+		// lazy mode loads themes per element — no base pair injected
 		expect(lazyMock).toHaveBeenCalledWith({ themes: ['b'] });
 	});
 

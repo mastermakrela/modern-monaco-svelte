@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-02
+
+### Added
+
+- Editors without an explicit `theme` now follow the system's `prefers-color-scheme` — live in init mode (`MonacoEditor`/`MarkdownEditor` switch when the OS setting changes), at mount in lazy mode (`LazyMonacoEditor`; the web component offers no handle to re-theme later). New `themeLight`/`themeDark` props (defaults: `vitesse-light`/`vitesse-dark`) customize the pair; an explicit `theme` behaves exactly as before.
+- `systemPrefersDark()` / `resolveTheme()` and `DEFAULT_LIGHT_THEME` / `DEFAULT_DARK_THEME` exported.
+
+### Changed
+
+- Previously, editors without a `theme` always used modern-monaco's bundled dark default; they now respect the system setting (on the server / during SSR the dark fallback is kept).
+- `preloadMonaco()` always registers the default light/dark pair so prefers-color-scheme editors work regardless of mount order (vitesse-dark ships bundled; vitesse-light costs one small theme-JSON fetch at init).
+
 ## [0.2.1] - 2026-06-02
 
 ### Fixed

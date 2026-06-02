@@ -1,4 +1,5 @@
 import type { Workspace } from 'modern-monaco';
+import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME } from './theme.svelte.js';
 import type { InitOptions, Monaco } from './types.js';
 
 /**
@@ -85,7 +86,10 @@ export function attachWorkspace(workspace: Workspace, monaco: Monaco): void {
  */
 function createInitSingleton<T>(
 	run: (mod: typeof import('modern-monaco'), merged: InitOptions) => T | Promise<T>,
-	{ handlesLateWorkspace = false }: { handlesLateWorkspace?: boolean } = {}
+	{
+		handlesLateWorkspace = false,
+		baseOptions
+	}: { handlesLateWorkspace?: boolean; baseOptions?: InitOptions } = {}
 ): (options?: InitOptions) => Promise<T> {
 	let promise: Promise<T> | null = null;
 	let pending: InitOptions[] = [];
@@ -138,7 +142,7 @@ function createInitSingleton<T>(
 		}
 		promise ??= (async () => {
 			const mod = await import('modern-monaco');
-			const merged = mergeInitOptions(pending);
+			const merged = mergeInitOptions(baseOptions ? [...pending, baseOptions] : pending);
 			pending = [];
 
 			const themeKeys = (merged.themes ?? []).map(stringKey).filter((key) => key !== null);
@@ -171,8 +175,14 @@ function createInitSingleton<T>(
  */
 export const preloadMonaco: (options?: InitOptions) => Promise<Monaco> = createInitSingleton(
 	(mod, merged) => mod.init(merged),
-	// a workspace arriving after init is attached via attachWorkspace()
-	{ handlesLateWorkspace: true }
+	{
+		// a workspace arriving after init is attached via attachWorkspace()
+		handlesLateWorkspace: true,
+		// the default light/dark pair is always registered so editors that
+		// follow prefers-color-scheme work regardless of mount order
+		// (vitesse-dark ships bundled; vitesse-light is one small JSON fetch)
+		baseOptions: { themes: [DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME] }
+	}
 );
 
 /**

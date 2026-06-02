@@ -2,6 +2,7 @@
 	import type { Workspace } from 'modern-monaco';
 	import { onMount, type Snippet } from 'svelte';
 	import { attachWorkspace, preloadMonaco } from './monaco.js';
+	import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME, resolveTheme } from './theme.svelte.js';
 	import { workspacePath } from './workspace.svelte.js';
 	import type { EditorOptions, InitOptions, Monaco, MonacoCodeEditor } from './types.js';
 
@@ -14,10 +15,17 @@
 		/** Language id (reactive). Ignored with `workspace` — the file decides. */
 		language?: string;
 		/**
-		 * Active theme (reactive). Switching only works between themes
-		 * registered at init time — list them in `themes` or via `preloadMonaco()`.
+		 * Active theme (reactive). When omitted, the editor follows the
+		 * system's `prefers-color-scheme` using `themeLight`/`themeDark`
+		 * (live — it switches when the system setting changes). Switching
+		 * only works between themes registered at init time — list them in
+		 * `themes` or via `preloadMonaco()`.
 		 */
 		theme?: string;
+		/** Theme used when the system prefers light (no explicit `theme`). */
+		themeLight?: string;
+		/** Theme used when the system prefers dark (no explicit `theme`). */
+		themeDark?: string;
 		/** Additional themes to register at init so `theme` can switch to them later. */
 		themes?: string[];
 		/** Monaco `IStandaloneEditorConstructionOptions` passed to `editor.create`. */
@@ -64,6 +72,8 @@
 		value = $bindable(''),
 		language = 'plaintext',
 		theme,
+		themeLight = DEFAULT_LIGHT_THEME,
+		themeDark = DEFAULT_DARK_THEME,
 		themes = [],
 		options = {},
 		init,
@@ -83,12 +93,20 @@
 	let ready = $state(false);
 	let disposed = false;
 
+	const resolvedTheme = $derived(resolveTheme(theme, themeLight, themeDark));
+
 	onMount(() => {
 		const disposables: { dispose(): void }[] = [];
 
 		(async () => {
 			const initOptions: InitOptions = { ...init };
-			const allThemes = [...(theme ? [theme] : []), ...themes, ...(init?.themes ?? [])];
+			// without an explicit theme, register the light/dark pair so the
+			// editor can follow prefers-color-scheme changes
+			const allThemes = [
+				...(theme ? [theme] : [themeLight, themeDark]),
+				...themes,
+				...(init?.themes ?? [])
+			];
 			if (allThemes.length > 0) initOptions.themes = allThemes;
 			if (workspace) initOptions.workspace = workspace;
 
@@ -105,14 +123,14 @@
 					? {
 							// the open file provides the model
 							model: null,
-							...(theme ? { theme } : {}),
+							theme: resolvedTheme,
 							automaticLayout: true,
 							...options
 						}
 					: {
 							value,
 							language,
-							...(theme ? { theme } : {}),
+							theme: resolvedTheme,
 							automaticLayout: true,
 							...options
 						}
@@ -229,10 +247,10 @@
 		}
 	});
 
-	// Reactive theme switching.
+	// Reactive theme switching (explicit prop or live prefers-color-scheme).
 	$effect(() => {
-		if (monaco && theme) {
-			monaco.editor.setTheme(theme);
+		if (monaco && resolvedTheme) {
+			monaco.editor.setTheme(resolvedTheme);
 		}
 	});
 
