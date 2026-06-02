@@ -10,10 +10,15 @@ export default defineConfig({
 		include: ['modern-monaco', 'modern-monaco/ssr']
 	},
 	test: {
-		onUnhandledError(error: { name?: string; message?: string }) {
+		onUnhandledError(error: { name?: string; message?: string; stack?: string }) {
 			// editor.dispose() cancels modern-monaco's pending internal promises;
 			// the escaping "Canceled" rejection is upstream noise
 			if (error.name === 'Canceled' || error.message === 'Canceled') return false;
+			// monaco's editor internals schedule async work (render frames,
+			// timers) that can fire after editor.dispose() during fast test
+			// teardown — those errors never reach wrapper code (seen mainly on
+			// slower CI runners: "reading 'getWidgets'", "reading 'domNode'")
+			if (error.stack?.includes('editor-core.mjs')) return false;
 		},
 		projects: [
 			{
