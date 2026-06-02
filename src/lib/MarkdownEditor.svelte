@@ -4,6 +4,7 @@
 	import { registerMarkdownActions } from './markdown/actions.js';
 	import { acquireMarkdownCompletions } from './markdown/completions.js';
 	import { createMarkdownDecorations } from './markdown/decorations.js';
+	import { markdownEditorDefaults } from './markdown/defaults.js';
 	import { setupMarkdownOnType } from './markdown/on-type.js';
 	import type {
 		EditorOptions,
@@ -62,30 +63,6 @@
 		inlineDecorations = true
 	}: Props = $props();
 
-	// Prose-friendly defaults; everything can be overridden via `options`.
-	const markdownDefaults: EditorOptions = {
-		minimap: { enabled: false },
-		wordWrap: 'on',
-		lineNumbers: 'off',
-		scrollBeyondLastLine: false,
-		renderLineHighlight: 'none',
-		overviewRulerLanes: 0,
-		hideCursorInOverviewRuler: true,
-		overviewRulerBorder: false,
-		folding: false,
-		padding: { top: 12, bottom: 12 },
-		scrollbar: {
-			vertical: 'auto',
-			horizontal: 'hidden',
-			verticalScrollbarSize: 8
-		},
-		unicodeHighlight: {
-			nonBasicASCII: false,
-			ambiguousCharacters: false,
-			invisibleCharacters: false
-		}
-	};
-
 	const disposables: IDisposable[] = [];
 
 	function handleReady(created: MonacoCodeEditor, monaco: Monaco) {
@@ -112,7 +89,7 @@
 	{loading}
 	{onchange}
 	class={className}
-	options={{ ...markdownDefaults, ...options }}
+	options={{ ...markdownEditorDefaults, ...options }}
 	onready={handleReady}
 />
 

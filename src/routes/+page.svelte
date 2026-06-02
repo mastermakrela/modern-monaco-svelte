@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { MarkdownEditor } from '$lib/index.js';
 
 	let value = $state(
@@ -21,9 +22,12 @@
 <main>
 	<header>
 		<h1>modern-monaco-svelte</h1>
-		<button onclick={() => (dark = !dark)}>
-			Switch to {dark ? 'light' : 'dark'} theme
-		</button>
+		<nav>
+			<a href={resolve('/lazy')}>lazy / SSR demo →</a>
+			<button onclick={() => (dark = !dark)}>
+				Switch to {dark ? 'light' : 'dark'} theme
+			</button>
+		</nav>
 	</header>
 
 	<MarkdownEditor

@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InitOptions } from '../../lib/types.js';
 
-const { initMock } = vi.hoisted(() => ({
-	initMock: vi.fn(async (options: unknown) => ({ __monaco: true, options }))
+const { initMock, lazyMock } = vi.hoisted(() => ({
+	initMock: vi.fn(async (options: unknown) => ({ __monaco: true, options })),
+	lazyMock: vi.fn()
 }));
 
-vi.mock('modern-monaco', () => ({ init: initMock }));
+vi.mock('modern-monaco', () => ({ init: initMock, lazy: lazyMock }));
 
 /** Fresh copy of the module so singleton state resets between tests. */
 async function loadModule() {
@@ -84,6 +85,50 @@ describe('preloadMonaco', () => {
 		await preloadMonaco({ themes: ['vitesse-dark'] });
 
 		expect(warn).not.toHaveBeenCalled();
+	});
+});
+
+describe('ensureLazyEditor', () => {
+	beforeEach(() => {
+		lazyMock.mockClear();
+		vi.stubGlobal('window', {});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	it('calls lazy() once with merged options', async () => {
+		const { ensureLazyEditor } = await loadModule();
+		ensureLazyEditor({ themes: ['vitesse-dark'] });
+		ensureLazyEditor({ themes: ['vitesse-light'] });
+		await ensureLazyEditor();
+
+		expect(lazyMock).toHaveBeenCalledTimes(1);
+		expect(lazyMock).toHaveBeenCalledWith({ themes: ['vitesse-dark', 'vitesse-light'] });
+	});
+
+	it('is independent from the preloadMonaco singleton', async () => {
+		const { ensureLazyEditor, preloadMonaco } = await loadModule();
+		await preloadMonaco({ themes: ['a'] });
+		await ensureLazyEditor({ themes: ['b'] });
+
+		expect(initMock).toHaveBeenCalledWith({ themes: ['a'] });
+		expect(lazyMock).toHaveBeenCalledWith({ themes: ['b'] });
+	});
+
+	it('warns on late options that ask for anything new', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const { ensureLazyEditor } = await loadModule();
+		await ensureLazyEditor({ themes: ['vitesse-dark'] });
+
+		await ensureLazyEditor({ themes: ['vitesse-dark'] });
+		expect(warn).not.toHaveBeenCalled();
+
+		await ensureLazyEditor({ themes: ['too-late'] });
+		expect(warn).toHaveBeenCalledWith(expect.stringContaining('already initialized'));
+		expect(lazyMock).toHaveBeenCalledTimes(1);
 	});
 });
 

@@ -1,11 +1,15 @@
 export { default as MonacoEditor } from './MonacoEditor.svelte';
 export { default as MarkdownEditor } from './MarkdownEditor.svelte';
+export { default as LazyMonacoEditor } from './LazyMonacoEditor.svelte';
 
-export { mergeInitOptions, preloadMonaco } from './monaco.js';
+export { ensureLazyEditor, mergeInitOptions, preloadMonaco } from './monaco.js';
+export { lazyOptionsScript, serializeLazyOptions } from './lazy-options.js';
+export type { LazyInput, LazyRenderOptions } from './lazy-options.js';
 
 export { prefixLine, registerMarkdownActions, wrapSelection } from './markdown/actions.js';
 export { acquireMarkdownCompletions, registerMarkdownCompletions } from './markdown/completions.js';
 export { createMarkdownDecorations } from './markdown/decorations.js';
+export { markdownEditorDefaults } from './markdown/defaults.js';
 export { setupMarkdownOnType } from './markdown/on-type.js';
 export {
 	computeInlineDecorations,

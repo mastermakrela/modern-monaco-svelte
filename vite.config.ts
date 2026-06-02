@@ -4,6 +4,11 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	optimizeDeps: {
+		// pre-bundle upfront so a mid-session discovery doesn't invalidate
+		// module URLs (breaks vitest browser iframes; slows first dev load)
+		include: ['modern-monaco', 'modern-monaco/ssr']
+	},
 	test: {
 		onUnhandledError(error: { name?: string; message?: string }) {
 			// editor.dispose() cancels modern-monaco's pending internal promises;
