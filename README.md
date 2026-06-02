@@ -1,65 +1,143 @@
-# Svelte library
+# modern-monaco-svelte
 
-Everything you need to build a Svelte library, powered by [`sv`](https://npmjs.com/package/sv).
+Svelte 5 components for [modern-monaco](https://github.com/esm-dev/modern-monaco) — a modernized Monaco Editor with Shiki syntax highlighting, no worker/CSS/bundler configuration, built-in LSP, and SSR support.
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+- **`MonacoEditor`** — thin wrapper: `bind:value`, reactive `theme`/`language`, full escape hatch to the raw monaco API
+- **`MarkdownEditor`** — drop-in markdown editor: formatting shortcuts, snippet completions, list auto-continuation, live `**bold**`/`*italic*` styling
+- **`LazyMonacoEditor`** — modern-monaco's lazy/SSR mode: zero-flash server-prerendered editors
+- **Workspaces** — multi-file editing with a virtual filesystem (IndexedDB), history navigation, and a reactive file explorer helper
+- Editors follow the system's `prefers-color-scheme` by default (live)
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+## Install
 
 ```sh
-# recreate this project
-bun x sv@0.15.3 create --template library --types ts --add prettier eslint mcp="ide:claude-code,opencode,vscode+setup:local" --install bun modern-monaco-svelte
+bun add modern-monaco-svelte modern-monaco
 ```
 
-## Developing
+`modern-monaco` is a peer dependency. No vite/bundler configuration is needed — editor modules, grammars, and themes load from [esm.sh](https://esm.sh) at runtime (configurable via the `cdn` init option).
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Markdown editor (the drop-in)
+
+```svelte
+<script lang="ts">
+	import { MarkdownEditor } from 'modern-monaco-svelte';
+
+	let content = $state('# Hello\n');
+</script>
+
+<MarkdownEditor bind:value={content} class="h-96 rounded border" />
+```
+
+Ships with Cmd/Ctrl+B/I/E/K/Shift+X formatting, heading/link/image/code-block completions, list continuation on Enter, and inline bold/italic decorations — each toggleable via `shortcuts`, `completions`, `listContinuation`, `inlineDecorations`.
+
+## Generic editor
+
+```svelte
+<script lang="ts">
+	import { MonacoEditor } from 'modern-monaco-svelte';
+
+	let code = $state('console.log("hi")');
+</script>
+
+<MonacoEditor
+	bind:value={code}
+	language="typescript"
+	options={{ minimap: { enabled: false } }}
+	onready={(editor, monaco) => {
+		/* raw monaco API */
+	}}
+	class="h-96"
+/>
+```
+
+Size the editor through the `class` prop (the container is `position: relative` with the editor filling it).
+
+## Theming
+
+Without a `theme` prop, editors follow `prefers-color-scheme` live, using `themeLight`/`themeDark` (defaults: `vitesse-light`/`vitesse-dark`). An explicit `theme` always wins:
+
+```svelte
+<MarkdownEditor
+	bind:value
+	theme={dark ? 'rose-pine-moon' : 'rose-pine-dawn'}
+	themes={['rose-pine-moon', 'rose-pine-dawn']}
+/>
+```
+
+modern-monaco can only switch between themes registered at init — list every theme you switch between in `themes`, or register them early:
+
+```ts
+import { preloadMonaco } from 'modern-monaco-svelte';
+
+// e.g. in a root layout's onMount — also warms up the editor
+preloadMonaco({ themes: ['rose-pine-moon', 'rose-pine-dawn'] });
+```
+
+Init is page-global: options from all editors mounting before the first init resolves are merged; later additions are ignored with a warning.
+
+## Workspaces (multi-file)
+
+```svelte
+<script lang="ts">
+	import { Workspace } from 'modern-monaco';
+	import { MonacoEditor, WorkspaceState } from 'modern-monaco-svelte';
+
+	// browser-only (IndexedDB); files persist across reloads
+	const workspace = new Workspace({
+		name: 'my-project',
+		initialFiles: { 'README.md': '# Hi\n', 'src/main.ts': 'export {}\n' },
+		entryFile: 'README.md'
+	});
+	const explorer = new WorkspaceState(workspace);
+</script>
+
+{#each explorer.files as path (path)}
+	<button onclick={() => explorer.open(path)}>{path}</button>
+{/each}
+
+<MonacoEditor {workspace} file={explorer.current} followHistory class="h-96" />
+```
+
+`file` is bindable and reactive (switching saves/restores per-file cursor and scroll state); `followHistory` wires the editor to `workspace.history` (`back()`/`forward()`/`push()`). Languages derive from filenames.
+
+## Lazy mode & SSR
+
+`LazyMonacoEditor` renders modern-monaco's `<monaco-editor>` web component — Shiki-highlighted code appears while the editor loads in the background. For zero flash, pre-render on the server:
+
+```ts
+// +page.server.ts
+import { renderMarkdownEditor } from 'modern-monaco-svelte/ssr';
+
+export const load = async ({ request }) => ({
+	editorHtml: await renderMarkdownEditor('# Pre-rendered\n', {
+		userAgent: request.headers.get('user-agent') ?? undefined
+	})
+});
+```
+
+```svelte
+<script lang="ts">
+	import { LazyMonacoEditor } from 'modern-monaco-svelte';
+
+	let { data } = $props();
+</script>
+
+<LazyMonacoEditor html={data.editorHtml} class="h-96" />
+```
+
+Lazy mode exposes no editor instance (upstream limitation): no `bind:value` or runtime theme switching — use `MonacoEditor` when you need those. With a `workspace`, content changes can be observed via the `onchange` prop.
+
+## Demos
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+git clone https://github.com/mastermakrela/modern-monaco-svelte
+cd modern-monaco-svelte && bun install && bun run dev
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+- `/` — markdown editor with explicit theme toggle
+- `/workspace` — multi-file explorer, history navigation
+- `/lazy` — SSR + hydration and client-side lazy mode
 
-## Building
+## License
 
-To build your library:
-
-```sh
-npm pack
-```
-
-To create a production version of your showcase app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```sh
-npm publish
-```
+[MIT](./LICENSE)

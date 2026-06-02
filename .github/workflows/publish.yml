@@ -1,0 +1,51 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # required for npm trusted publishing (OIDC) + provenance
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify tag matches package.json version
+        run: |
+          pkg_version="v$(node -p "require('./package.json').version")"
+          if [ "$pkg_version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $pkg_version"
+            exit 1
+          fi
+
+      # deterministic release gate; the full suite (incl. browser tests)
+      # runs in CI on every push to main
+      - name: Lint
+        run: bun run lint
+
+      - name: Type check
+        run: bun run check
+
+      - name: Unit tests
+        run: bun run test:unit
+
+      # npm >= 11.5 (node 24) is required for OIDC trusted publishing
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      # auth comes from the npm trusted publisher configured for this repo
+      # (no NPM_TOKEN secret needed); `prepack` builds dist/ automatically
+      - name: Publish
+        run: npm publish --provenance --access public
