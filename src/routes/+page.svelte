@@ -23,6 +23,7 @@
 	<header>
 		<h1>modern-monaco-svelte</h1>
 		<nav>
+			<a href={resolve('/workspace')}>workspace demo →</a>
 			<a href={resolve('/lazy')}>lazy / SSR demo →</a>
 			<button onclick={() => (dark = !dark)}>
 				Switch to {dark ? 'light' : 'dark'} theme

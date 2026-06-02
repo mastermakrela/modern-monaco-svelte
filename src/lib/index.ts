@@ -3,6 +3,7 @@ export { default as MarkdownEditor } from './MarkdownEditor.svelte';
 export { default as LazyMonacoEditor } from './LazyMonacoEditor.svelte';
 
 export { ensureLazyEditor, mergeInitOptions, preloadMonaco } from './monaco.js';
+export { listWorkspaceFiles, WorkspaceState } from './workspace.svelte.js';
 export { lazyOptionsScript, serializeLazyOptions } from './lazy-options.js';
 export type { LazyInput, LazyRenderOptions } from './lazy-options.js';
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Workspace } from 'modern-monaco';
 	import { onDestroy, type Snippet } from 'svelte';
 	import MonacoEditor from './MonacoEditor.svelte';
 	import { registerMarkdownActions } from './markdown/actions.js';
@@ -25,6 +26,12 @@
 		options?: EditorOptions;
 		/** Extra modern-monaco init options (see `MonacoEditor`). */
 		init?: InitOptions;
+		/** Workspace backing the editor (see `MonacoEditor`). */
+		workspace?: Workspace;
+		/** The open file — supports `bind:file` (see `MonacoEditor`). */
+		file?: string;
+		/** Follow and drive `workspace.history` (see `MonacoEditor`). */
+		followHistory?: boolean;
 		/** The underlying monaco editor instance — supports `bind:editor`. */
 		editor?: MonacoCodeEditor;
 		onready?: (editor: MonacoCodeEditor, monaco: Monaco) => void;
@@ -51,6 +58,9 @@
 		themes = [],
 		options = {},
 		init,
+		workspace,
+		file = $bindable(undefined),
+		followHistory = false,
 		editor = $bindable(undefined),
 		onready,
 		onchange,
@@ -81,10 +91,13 @@
 <MonacoEditor
 	bind:value
 	bind:editor
+	bind:file
 	language="markdown"
 	{theme}
 	{themes}
 	{init}
+	{workspace}
+	{followHistory}
 	{name}
 	{loading}
 	{onchange}

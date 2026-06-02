@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-02
+
+### Added
+
+- Workspace / multi-file support for `MonacoEditor` (and `MarkdownEditor` via passthrough): new `workspace`, `file` (bindable, reactive — switching swaps models with per-file cursor/scroll state saved and restored via `workspace.viewState`), and `followHistory` props (opening files pushes `workspace.history` entries; `back()`/`forward()`/`push()` drive the editor and update `file`). With a workspace, `bind:value` follows the open file and languages derive from filenames; the `language` prop is ignored.
+- `WorkspaceState` — reactive (runes) view of a workspace for file trees and tab bars: `files` tracks the filesystem via `fs.watch`, `current` tracks `workspace.history`, plus `open()`, `refresh()`, `dispose()`. Browser-only, like workspaces themselves.
+- `listWorkspaceFiles(fs)` — recursive sorted file listing; `workspacePath(uriOrPath)` — normalizes `file:///` history URIs to bare paths.
+- `/workspace` demo route: sidebar file explorer, file creation, history back/forward, multi-language switching.
+
+### Notes
+
+- `workspace.history` stores `file:///` URIs internally; all component/state APIs accept and expose bare paths (`src/main.ts`).
+
 ## [0.1.0] - 2026-06-02
 
 ### Added
