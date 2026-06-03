@@ -27,6 +27,12 @@
 		themeLight?: string;
 		/** Theme used when the system prefers dark (no explicit `theme`). */
 		themeDark?: string;
+		/**
+		 * Drives the light/dark choice from your own source (e.g. mode-watcher,
+		 * a user toggle) instead of `prefers-color-scheme`. Ignored when an
+		 * explicit `theme` is set. Leave `undefined` to follow the system.
+		 */
+		dark?: boolean;
 		/** Additional themes to register at init. */
 		themes?: string[];
 		/** Monaco editor options — merged over the markdown-friendly defaults. */
@@ -64,6 +70,7 @@
 		theme,
 		themeLight,
 		themeDark,
+		dark,
 		themes = [],
 		options = {},
 		init,
@@ -105,6 +112,7 @@
 	{theme}
 	{themeLight}
 	{themeDark}
+	{dark}
 	{themes}
 	{init}
 	{workspace}

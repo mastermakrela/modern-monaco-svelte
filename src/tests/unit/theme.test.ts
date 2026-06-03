@@ -12,4 +12,19 @@ describe('resolveTheme', () => {
 			DEFAULT_DARK_THEME
 		);
 	});
+
+	it('lets an explicit `dark` flag pick the pair, overriding the system', () => {
+		expect(resolveTheme(undefined, DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME, false)).toBe(
+			DEFAULT_LIGHT_THEME
+		);
+		expect(resolveTheme(undefined, DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME, true)).toBe(
+			DEFAULT_DARK_THEME
+		);
+	});
+
+	it('still lets an explicit theme win over `dark`', () => {
+		expect(resolveTheme('rose-pine', DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME, false)).toBe(
+			'rose-pine'
+		);
+	});
 });

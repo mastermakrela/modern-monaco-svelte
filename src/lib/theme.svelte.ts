@@ -18,14 +18,20 @@ export function systemPrefersDark(): boolean {
 }
 
 /**
- * Resolves the theme to apply: an explicit `theme` wins, otherwise the
- * light/dark pair is picked by the system's `prefers-color-scheme`
- * (reactive — resolve inside `$derived`/`$effect` to follow live changes).
+ * Resolves the theme to apply: an explicit `theme` wins; otherwise the
+ * light/dark pair is picked by `dark` when provided, falling back to the
+ * system's `prefers-color-scheme` (reactive — resolve inside
+ * `$derived`/`$effect` to follow live changes).
+ *
+ * Pass `dark` to drive the color scheme from your own source (e.g.
+ * mode-watcher, a user toggle) instead of `prefers-color-scheme`.
  */
 export function resolveTheme(
 	explicit: string | undefined,
 	themeLight: string,
-	themeDark: string
+	themeDark: string,
+	dark?: boolean
 ): string {
-	return explicit ?? (systemPrefersDark() ? themeDark : themeLight);
+	if (explicit) return explicit;
+	return (dark ?? systemPrefersDark()) ? themeDark : themeLight;
 }

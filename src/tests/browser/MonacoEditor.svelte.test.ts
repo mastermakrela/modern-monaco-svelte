@@ -67,6 +67,30 @@ describe('MonacoEditor', () => {
 		});
 	});
 
+	it('preserves the undo stack and cursor across external value changes', async () => {
+		const { host } = renderHost({ initial: 'start' });
+		const editor = await waitForEditor(host);
+
+		// a user edit at the end, then a cursor placed mid-document
+		editor.setPosition({ lineNumber: 1, column: 6 });
+		editor.trigger('test', 'type', { text: '!' });
+		await vi.waitFor(() => expect(host.getValue()).toBe('start!'));
+		editor.setPosition({ lineNumber: 1, column: 3 });
+
+		// an external push (e.g. a query refresh) replaces the value
+		host.setValue('external value');
+		await vi.waitFor(() => expect(editor.getValue()).toBe('external value'));
+
+		// cursor survives the external push (setValue would snap it to 1:1)
+		expect(editor.getPosition()).toMatchObject({ lineNumber: 1, column: 3 });
+
+		// undo still walks back through history rather than being reset
+		editor.trigger('test', 'undo', null);
+		await vi.waitFor(() => expect(editor.getValue()).toBe('start!'));
+		editor.trigger('test', 'undo', null);
+		await vi.waitFor(() => expect(editor.getValue()).toBe('start'));
+	});
+
 	it('calls onready with the editor and monaco namespace', async () => {
 		const onready = vi.fn();
 		const { host } = renderHost({ initial: '', onready });

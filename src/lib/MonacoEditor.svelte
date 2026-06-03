@@ -26,6 +26,13 @@
 		themeLight?: string;
 		/** Theme used when the system prefers dark (no explicit `theme`). */
 		themeDark?: string;
+		/**
+		 * Drives the light/dark choice between `themeLight`/`themeDark` from your
+		 * own source (e.g. mode-watcher, a user toggle) instead of the system's
+		 * `prefers-color-scheme`. Ignored when an explicit `theme` is set.
+		 * Leave `undefined` to follow `prefers-color-scheme` (the default).
+		 */
+		dark?: boolean;
 		/** Additional themes to register at init so `theme` can switch to them later. */
 		themes?: string[];
 		/** Monaco `IStandaloneEditorConstructionOptions` passed to `editor.create`. */
@@ -74,6 +81,7 @@
 		theme,
 		themeLight = DEFAULT_LIGHT_THEME,
 		themeDark = DEFAULT_DARK_THEME,
+		dark,
 		themes = [],
 		options = {},
 		init,
@@ -93,7 +101,7 @@
 	let ready = $state(false);
 	let disposed = false;
 
-	const resolvedTheme = $derived(resolveTheme(theme, themeLight, themeDark));
+	const resolvedTheme = $derived(resolveTheme(theme, themeLight, themeDark, dark));
 
 	onMount(() => {
 		const disposables: { dispose(): void }[] = [];
@@ -239,13 +247,28 @@
 		});
 	});
 
-	// Push external value changes into the editor.
+	// Push external value changes into the editor as an undoable edit so the
+	// undo stack and cursor/scroll survive (unlike `setValue`, which resets the
+	// undo history and snaps the cursor to the top — clobbering the user
+	// mid-edit when e.g. a SvelteKit query refresh rewrites the bound value).
 	$effect(() => {
 		const next = value;
 		if (editor && editor.getModel() && editor.getValue() !== next) {
-			editor.setValue(next);
+			applyExternalValue(editor, next);
 		}
 	});
+
+	function applyExternalValue(ed: MonacoCodeEditor, next: string) {
+		const model = ed.getModel();
+		if (!model) return;
+		const viewState = ed.saveViewState();
+		// bracket the replacement in its own undo stop so the user can undo just
+		// the external change (and undo past it into their own edit history)
+		ed.pushUndoStop();
+		ed.executeEdits('external', [{ range: model.getFullModelRange(), text: next }]);
+		ed.pushUndoStop();
+		if (viewState) ed.restoreViewState(viewState);
+	}
 
 	// Reactive theme switching (explicit prop or live prefers-color-scheme).
 	$effect(() => {

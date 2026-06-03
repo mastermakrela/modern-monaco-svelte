@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-03
+
+### Added
+
+- `dark` prop on `MonacoEditor`/`MarkdownEditor` — drives the `themeLight`/`themeDark` choice from your own source (e.g. mode-watcher, a user toggle) instead of `prefers-color-scheme`. Ignored when an explicit `theme` is set; `undefined` keeps the default system-following behavior. `resolveTheme()` gains a matching optional `dark` argument.
+
+### Changed
+
+- External `value` changes are now applied as an undoable edit that preserves the undo stack and cursor/scroll position, instead of `editor.setValue()` (which reset the undo history and snapped the cursor to the top). This keeps the editor usable when a bound value is rewritten mid-edit — e.g. a SvelteKit single-flight query refresh.
+
 ## [0.3.0] - 2026-06-02
 
 ### Added

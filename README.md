@@ -52,6 +52,8 @@ Ships with Cmd/Ctrl+B/I/E/K/Shift+X formatting, heading/link/image/code-block co
 
 Size the editor through the `class` prop (the container is `position: relative` with the editor filling it).
 
+`value` is two-way bound: editor edits flow out, and external assignments flow back in. An external change (e.g. a SvelteKit query refresh rewriting the bound value mid-edit) is applied as an undoable edit that **preserves the undo stack and the cursor/scroll position** — it won't reset the editor or snap the cursor to the top.
+
 ## Theming
 
 Without a `theme` prop, editors follow `prefers-color-scheme` live, using `themeLight`/`themeDark` (defaults: `vitesse-light`/`vitesse-dark`). An explicit `theme` always wins:
@@ -63,6 +65,18 @@ Without a `theme` prop, editors follow `prefers-color-scheme` live, using `theme
 	themes={['rose-pine-moon', 'rose-pine-dawn']}
 />
 ```
+
+If your app already tracks light/dark itself (e.g. [mode-watcher](https://github.com/svecosystem/mode-watcher) or a user toggle), pass `dark` to drive the `themeLight`/`themeDark` choice instead of `prefers-color-scheme` — no need to assemble the theme string yourself:
+
+```svelte
+<script lang="ts">
+	import { mode } from 'mode-watcher';
+</script>
+
+<MarkdownEditor bind:value dark={mode.current === 'dark'} />
+```
+
+`dark` is ignored when an explicit `theme` is set, and leaving it `undefined` keeps the default `prefers-color-scheme` behavior.
 
 modern-monaco can only switch between themes registered at init — list every theme you switch between in `themes`, or register them early:
 
