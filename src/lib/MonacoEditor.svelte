@@ -270,6 +270,12 @@
 		if (viewState) ed.restoreViewState(viewState);
 	}
 
+	// Reactive construction options applied live (e.g. toggling
+	// `readOnly` to use the editor as a syntax-highlighted code block).
+	$effect(() => {
+		editor?.updateOptions(options);
+	});
+
 	// Reactive theme switching (explicit prop or live prefers-color-scheme).
 	$effect(() => {
 		if (monaco && resolvedTheme) {

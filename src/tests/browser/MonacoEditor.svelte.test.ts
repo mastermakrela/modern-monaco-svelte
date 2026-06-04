@@ -16,6 +16,7 @@ interface MonacoHostApi {
 	getEditor(): MonacoCodeEditor | undefined;
 	setTheme(next: string): void;
 	setLanguage(next: string): void;
+	setReadOnly(next: boolean): void;
 }
 
 /** Renders the host fixture; `component` is cast to its exported functions. */
@@ -129,6 +130,23 @@ describe('MonacoEditor', () => {
 
 		await vi.waitFor(() => {
 			expect(editor.getModel()?.getLanguageId()).toBe('markdown');
+		});
+	});
+
+	it('applies reactive options (readOnly) live', async () => {
+		const { host } = renderHost({ initial: 'locked', readOnly: true });
+		const editor = await waitForEditor(host);
+
+		// read-only: typing is rejected
+		editor.trigger('test', 'type', { text: 'x' });
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		expect(editor.getValue()).toBe('locked');
+
+		// unlock via the reactive options prop — typing now lands
+		host.setReadOnly(false);
+		await vi.waitFor(() => {
+			editor.trigger('test', 'type', { text: '!' });
+			expect(editor.getValue()).not.toBe('locked');
 		});
 	});
 

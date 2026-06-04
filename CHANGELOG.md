@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `MonacoDiffEditor` — side-by-side (or inline) diff of two sources. Takes either two strings (`original`/`modified` + `language`, with optional per-side `originalLanguage`/`modifiedLanguage`) or two `workspace` files (`originalFile`/`modifiedFile`, languages derived from filenames); the two input modes can be mixed per side. `readOnly` (default `true`) is a pure preview; set it to `false` to edit the modified side with `bind:modified` (the original always stays read-only). Reuses the shared theme machinery (`theme`/`themeLight`/`themeDark`/`dark`/`themes`) and exposes the raw instance via `bind:editor`/`onready`. New `DiffEditorOptions` and `MonacoDiffEditorInstance` types exported.
+
+### Changed
+
+- The `options` prop on `MonacoEditor` and `MonacoDiffEditor` is now reactive — changes are applied live via `editor.updateOptions()` (previously they only took effect at construction). This makes runtime toggles like `options={{ readOnly }}` (use the editor as a code block) and the diff editor's `renderSideBySide` (split ↔ inline) work without remounting.
+
 ## [0.4.0] - 2026-06-03
 
 ### Added

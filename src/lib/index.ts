@@ -1,4 +1,5 @@
 export { default as MonacoEditor } from './MonacoEditor.svelte';
+export { default as MonacoDiffEditor } from './MonacoDiffEditor.svelte';
 export { default as MarkdownEditor } from './MarkdownEditor.svelte';
 export { default as LazyMonacoEditor } from './LazyMonacoEditor.svelte';
 
@@ -31,4 +32,12 @@ export type {
 	SnippetSuggestionSpec
 } from './markdown/patterns.js';
 
-export type { EditorOptions, IDisposable, InitOptions, Monaco, MonacoCodeEditor } from './types.js';
+export type {
+	DiffEditorOptions,
+	EditorOptions,
+	IDisposable,
+	InitOptions,
+	Monaco,
+	MonacoCodeEditor,
+	MonacoDiffEditorInstance
+} from './types.js';

@@ -7,12 +7,14 @@
 		language: initialLanguage = 'plaintext',
 		theme: initialTheme = undefined,
 		themes = [],
+		readOnly: initialReadOnly = false,
 		onready = undefined
 	}: {
 		initial?: string;
 		language?: string;
 		theme?: string;
 		themes?: string[];
+		readOnly?: boolean;
 		onready?: (editor: MonacoCodeEditor, monaco: Monaco) => void;
 	} = $props();
 
@@ -24,9 +26,14 @@
 	let theme = $state(initialTheme);
 	// svelte-ignore state_referenced_locally
 	let language = $state(initialLanguage);
+	// svelte-ignore state_referenced_locally
+	let readOnly = $state(initialReadOnly);
 
 	export function getValue(): string {
 		return value;
+	}
+	export function setReadOnly(next: boolean) {
+		readOnly = next;
 	}
 	export function setValue(next: string) {
 		value = next;
@@ -42,7 +49,16 @@
 	}
 </script>
 
-<MonacoEditor bind:value bind:editor {language} {theme} {themes} {onready} class="host-editor" />
+<MonacoEditor
+	bind:value
+	bind:editor
+	{language}
+	{theme}
+	{themes}
+	{onready}
+	options={{ readOnly }}
+	class="host-editor"
+/>
 
 <style>
 	:global(.host-editor) {

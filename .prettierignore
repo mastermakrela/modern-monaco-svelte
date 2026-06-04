@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Demo is a self-contained sub-project with its own toolchain
+/demo/

@@ -3,6 +3,7 @@
 Svelte 5 components for [modern-monaco](https://github.com/esm-dev/modern-monaco) — a modernized Monaco Editor with Shiki syntax highlighting, no worker/CSS/bundler configuration, built-in LSP, and SSR support.
 
 - **`MonacoEditor`** — thin wrapper: `bind:value`, reactive `theme`/`language`, full escape hatch to the raw monaco API
+- **`MonacoDiffEditor`** — side-by-side diff of two strings or two workspace files; read-only preview by default, optionally editable
 - **`MarkdownEditor`** — drop-in markdown editor: formatting shortcuts, snippet completions, list auto-continuation, live `**bold**`/`*italic*` styling
 - **`LazyMonacoEditor`** — modern-monaco's lazy/SSR mode: zero-flash server-prerendered editors
 - **Workspaces** — multi-file editing with a virtual filesystem (IndexedDB), history navigation, and a reactive file explorer helper
@@ -53,6 +54,29 @@ Ships with Cmd/Ctrl+B/I/E/K/Shift+X formatting, heading/link/image/code-block co
 Size the editor through the `class` prop (the container is `position: relative` with the editor filling it).
 
 `value` is two-way bound: editor edits flow out, and external assignments flow back in. An external change (e.g. a SvelteKit query refresh rewriting the bound value mid-edit) is applied as an undoable edit that **preserves the undo stack and the cursor/scroll position** — it won't reset the editor or snap the cursor to the top.
+
+## Diff editor
+
+`MonacoDiffEditor` renders monaco's diff view. Give it two strings (with a `language`), two `workspace` files, or one of each:
+
+```svelte
+<script lang="ts">
+	import { MonacoDiffEditor } from 'modern-monaco-svelte';
+
+	let { before, after } = $props();
+</script>
+
+<!-- read-only preview of two strings -->
+<MonacoDiffEditor original={before} modified={after} language="typescript" class="h-96" />
+```
+
+It's a read-only preview by default. Set `readOnly={false}` to edit the modified (right) side — the original (left) always stays read-only — and bind the result:
+
+```svelte
+<MonacoDiffEditor original={base} bind:modified={draft} language="markdown" readOnly={false} />
+```
+
+With a `workspace`, pass `originalFile`/`modifiedFile` paths instead (reactive — assigning a new path swaps that side's model, languages derive from filenames). It shares the same theming props as the other editors, and `bind:editor`/`onready` expose the raw `IStandaloneDiffEditor` (`getOriginalEditor()`/`getModifiedEditor()`).
 
 ## Theming
 

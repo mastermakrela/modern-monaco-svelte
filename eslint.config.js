@@ -12,6 +12,8 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
+	// the demo is a self-contained sub-project with its own toolchain
+	{ ignores: ['demo/'] },
 	js.configs.recommended,
 	ts.configs.recommended,
 	svelte.configs.recommended,
