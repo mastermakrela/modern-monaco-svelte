@@ -11,8 +11,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
 	},
 	"dependencies": {
-		"modern-monaco": "^0.4.2",
-		"modern-monaco-svelte": "file:.."
+		"modern-monaco": "^0.4.2"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.10",

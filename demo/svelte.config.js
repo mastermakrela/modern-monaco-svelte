@@ -11,7 +11,14 @@ const config = {
 		adapter: adapter({ fallback: '404.html' }),
 		// On GitHub Pages the site is served from /<repo>; the deploy workflow
 		// sets BASE_PATH=/modern-monaco-svelte. Empty for local dev/preview.
-		paths: { base: process.env.BASE_PATH || '' }
+		paths: { base: process.env.BASE_PATH || '' },
+		// Resolve the parent package by its own name straight to the library
+		// source. The demo lives *inside* the package root, so a `file:..`
+		// dependency makes bun materialize the package (including this `demo/`)
+		// into demo/node_modules/modern-monaco-svelte, recursing until the path
+		// blows past PATH_MAX. Aliasing avoids node_modules entirely and feeds
+		// both Vite bundling and the generated tsconfig (so svelte-check too).
+		alias: { 'modern-monaco-svelte': '../src/lib' }
 	}
 };
 

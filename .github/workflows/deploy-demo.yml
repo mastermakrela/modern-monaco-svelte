@@ -23,17 +23,13 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - name: Install library dependencies
-        run: bun install --frozen-lockfile
-
-      # The demo depends on the library via `file:..`, which resolves to the
-      # built `dist/` — package the library before installing the demo.
-      - name: Build library
-        run: bun run prepack
-
+      # The demo resolves `modern-monaco-svelte` to the library source via a
+      # SvelteKit alias (see demo/svelte.config.js), so there's no `file:..`
+      # dependency and no library build step needed — just install the demo's
+      # own deps and build.
       - name: Install demo dependencies
         working-directory: demo
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build demo
         working-directory: demo
