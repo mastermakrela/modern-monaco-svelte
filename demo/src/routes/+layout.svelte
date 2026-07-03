@@ -8,7 +8,8 @@
 	const links = [
 		{ href: '/', label: 'Markdown & code' },
 		{ href: '/diff', label: 'Diff' },
-		{ href: '/workspace', label: 'Workspace' }
+		{ href: '/workspace', label: 'Workspace' },
+		{ href: '/workspace-rows', label: 'Workspace from DB rows' }
 	] as const;
 </script>
 

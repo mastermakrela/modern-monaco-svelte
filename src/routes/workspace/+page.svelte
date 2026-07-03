@@ -35,7 +35,10 @@
 <main>
 	<header>
 		<h1>Workspace / multi-file demo</h1>
-		<a href={resolve('/')}>← init mode demo</a>
+		<nav>
+			<a href={resolve('/workspace-rows')}>workspace from DB rows →</a>
+			<a href={resolve('/')}>← init mode demo</a>
+		</nav>
 	</header>
 
 	{#if workspace && explorer}
@@ -77,6 +80,11 @@
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 1rem;
+	}
+
+	header nav {
+		display: flex;
+		gap: 1rem;
 	}
 
 	h1 {
