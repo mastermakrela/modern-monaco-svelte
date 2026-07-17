@@ -7,6 +7,9 @@ const { initMock, lazyMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('modern-monaco', () => ({ init: initMock, lazy: lazyMock }));
+// modern-monaco/core resolves to the same engine as modern-monaco at runtime
+// (see monaco.ts) — reuse the same mocks to exercise that in tests.
+vi.mock('modern-monaco/core', () => ({ init: initMock, lazy: lazyMock }));
 
 /** Fresh copy of the module so singleton state resets between tests. */
 async function loadModule() {
@@ -210,6 +213,50 @@ describe('ensureLazyEditor', () => {
 		await ensureLazyEditor({ workspace: { setupMonaco: vi.fn() } } as never);
 
 		expect(warn).toHaveBeenCalledWith(expect.stringContaining('already initialized'));
+	});
+});
+
+describe('preloadMonacoCore', () => {
+	beforeEach(() => {
+		initMock.mockClear();
+		vi.stubGlobal('window', {});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	it('does not inject the default light/dark pair (core has no bundled themes)', async () => {
+		const { preloadMonacoCore } = await loadModule();
+		await preloadMonacoCore({ themes: ['core-demo-ink'] });
+
+		expect(initMock).toHaveBeenCalledWith({ themes: ['core-demo-ink'] });
+	});
+
+	it('shares its init singleton with preloadMonaco: only the first call actually loads', async () => {
+		const { preloadMonaco, preloadMonacoCore } = await loadModule();
+
+		await preloadMonaco({ themes: ['a'] });
+		expect(() => preloadMonacoCore({ themes: ['core-demo-ink'] })).toThrow(
+			/already initialized via 'modern-monaco'/
+		);
+
+		// modern-monaco/core is never actually loaded once modern-monaco already won
+		expect(initMock).toHaveBeenCalledTimes(1);
+		expect(initMock).toHaveBeenCalledWith({ themes: ['a', 'vitesse-dark', 'vitesse-light'] });
+	});
+
+	it('throws the same way in reverse order (core wins, default is rejected)', async () => {
+		const { preloadMonaco, preloadMonacoCore } = await loadModule();
+
+		await preloadMonacoCore({ themes: ['core-demo-ink'] });
+		expect(() => preloadMonaco({ themes: ['a'] })).toThrow(
+			/already initialized via 'modern-monaco\/core'/
+		);
+
+		expect(initMock).toHaveBeenCalledTimes(1);
+		expect(initMock).toHaveBeenCalledWith({ themes: ['core-demo-ink'] });
 	});
 });
 

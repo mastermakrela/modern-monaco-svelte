@@ -5,11 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-07-17
 
 ### Added
 
 - `MonacoDiffEditor` — side-by-side (or inline) diff of two sources. Takes either two strings (`original`/`modified` + `language`, with optional per-side `originalLanguage`/`modifiedLanguage`) or two `workspace` files (`originalFile`/`modifiedFile`, languages derived from filenames); the two input modes can be mixed per side. `readOnly` (default `true`) is a pure preview; set it to `false` to edit the modified side with `bind:modified` (the original always stays read-only). Reuses the shared theme machinery (`theme`/`themeLight`/`themeDark`/`dark`/`themes`) and exposes the raw instance via `bind:editor`/`onready`. New `DiffEditorOptions` and `MonacoDiffEditorInstance` types exported.
+- `WorkspaceState` write helpers: `create(path, content)` (creates missing parent directories, throws on an existing path), `rename(oldPath, newPath, { overwrite })`, and `remove(path, { recursive })` — both fix up `current`/`workspace.history` in place when the affected file is the one currently open.
+- `modern-monaco-svelte/core` subpath — an opt-in path to modern-monaco's slim `modern-monaco/core` entry (~16KB, no bundled grammars/themes/LSP) for bundle-size-sensitive apps: `preloadMonacoCore()` / `ensureLazyEditorCore()`, plus re-exports of `registerSyntax()` / `registerTheme()` / `registerLSPProvider()`. Shares its engine and theme/syntax registries with the default `modern-monaco` entry — mixing both on one page/SPA session now throws instead of silently corrupting the running editor. New `/core` demo route.
+- `resolveServerColorScheme(request)` (from `modern-monaco-svelte/ssr`) — resolves the client's real light/dark preference on the server from the `Sec-CH-Prefers-Color-Scheme` client hint (falling back to a `color-scheme` cookie) for picking `options.theme` before pre-rendering. Pair with the new `src/hooks.server.ts` recipe (sets `Accept-CH`/`Critical-CH` so the browser starts sending the hint) — see `renderEditor`'s JSDoc. The `/lazy` demo now uses this instead of always guessing `vitesse-dark`.
+- `/workspace-rows` demo route: any array of `{ uuid, name, content }` objects (e.g. rows from a database) can back a workspace — edit a file in the editor or edit the JSON directly, both stay live via a derived preview.
 
 ### Changed
 

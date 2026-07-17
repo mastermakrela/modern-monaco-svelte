@@ -26,6 +26,10 @@
 			<a href={resolve('/workspace')}>workspace demo →</a>
 			<a href={resolve('/workspace-rows')}>workspace from DB rows →</a>
 			<a href={resolve('/lazy')}>lazy / SSR demo →</a>
+			<!-- full reload: modern-monaco/core shares its engine with this page's
+			     default modern-monaco — an SPA transition between them would corrupt it -->
+			<a href={resolve('/core')} data-sveltekit-reload>modern-monaco/core demo →</a>
+			<a href={resolve('/changelog')}>changelog →</a>
 			<button onclick={() => (dark = !dark)}>
 				Switch to {dark ? 'light' : 'dark'} theme
 			</button>

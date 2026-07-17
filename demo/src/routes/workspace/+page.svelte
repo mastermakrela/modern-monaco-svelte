@@ -26,9 +26,12 @@
 		event.preventDefault();
 		const path = newFileName.trim();
 		if (!workspace || !explorer || !path) return;
-		await workspace.fs.writeFile(path, '');
-		explorer.open(path);
-		newFileName = '';
+		try {
+			await explorer.create(path);
+			newFileName = '';
+		} catch (err) {
+			console.error(err);
+		}
 	}
 </script>
 

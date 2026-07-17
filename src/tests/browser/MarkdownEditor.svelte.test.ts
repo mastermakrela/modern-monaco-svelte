@@ -1,31 +1,6 @@
 import { userEvent } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { render } from 'vitest-browser-svelte';
-import type { MonacoCodeEditor } from '../../lib/types.js';
-import MarkdownHost from './fixtures/MarkdownHost.svelte';
-
-interface MarkdownHostApi {
-	getValue(): string;
-	setValue(next: string): void;
-	getEditor(): MonacoCodeEditor | undefined;
-}
-
-/** Renders the host fixture; `component` is cast to its exported functions. */
-function renderHost(props: Record<string, unknown> = {}) {
-	const screen = render(MarkdownHost, props);
-	return { screen, host: screen.component as unknown as MarkdownHostApi };
-}
-
-async function waitForEditor(host: MarkdownHostApi): Promise<MonacoCodeEditor> {
-	return await vi.waitFor(
-		() => {
-			const editor = host.getEditor();
-			if (!editor) throw new Error('editor not ready yet');
-			return editor;
-		},
-		{ timeout: 25_000, interval: 100 }
-	);
-}
+import { renderHost, waitForEditor } from './fixtures/markdown-host.js';
 
 describe('MarkdownEditor', () => {
 	it('uses the markdown language and prose-friendly defaults', async () => {

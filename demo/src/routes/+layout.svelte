@@ -9,16 +9,30 @@
 		{ href: '/', label: 'Markdown & code' },
 		{ href: '/diff', label: 'Diff' },
 		{ href: '/workspace', label: 'Workspace' },
-		{ href: '/workspace-rows', label: 'Workspace from DB rows' }
+		{ href: '/workspace-rows', label: 'Workspace from DB rows' },
+		{ href: '/core', label: 'modern-monaco/core' },
+		{ href: '/changelog', label: 'Changelog' }
 	] as const;
+
+	// modern-monaco/core shares its engine with the default modern-monaco used
+	// everywhere else in this demo — force a full reload crossing that
+	// boundary in either direction, or an SPA transition would corrupt
+	// whichever entry point loaded second.
+	const onCorePage = $derived(page.url.pathname === resolve('/core'));
 </script>
 
 <div class="app" class:dark={ui.dark}>
 	<header>
-		<a class="brand" href={resolve('/')}>modern-monaco-svelte</a>
+		<a class="brand" href={resolve('/')} data-sveltekit-reload={onCorePage ? '' : undefined}>
+			modern-monaco-svelte
+		</a>
 		<nav>
 			{#each links as link (link.href)}
-				<a href={resolve(link.href)} aria-current={page.url.pathname === resolve(link.href)}>
+				<a
+					href={resolve(link.href)}
+					aria-current={page.url.pathname === resolve(link.href)}
+					data-sveltekit-reload={link.href === '/core' || onCorePage ? '' : undefined}
+				>
 					{link.label}
 				</a>
 			{/each}

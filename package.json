@@ -1,6 +1,6 @@
 {
 	"name": "modern-monaco-svelte",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Svelte 5 components for modern-monaco — drop-in Monaco/markdown editors with Shiki highlighting, workspaces, lazy loading, and SSR",
 	"license": "MIT",
 	"repository": {
@@ -44,6 +44,10 @@
 		"./ssr": {
 			"types": "./dist/ssr.d.ts",
 			"default": "./dist/ssr.js"
+		},
+		"./core": {
+			"types": "./dist/core.d.ts",
+			"default": "./dist/core.js"
 		}
 	},
 	"peerDependencies": {

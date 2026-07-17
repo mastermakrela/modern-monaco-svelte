@@ -1,4 +1,4 @@
-import type { Workspace } from 'modern-monaco';
+import { NotFoundError, type Workspace } from 'modern-monaco/workspace';
 import type { IDisposable } from './types.js';
 
 /** The subset of modern-monaco's `FileSystem` needed to list files. */
@@ -17,6 +17,17 @@ export function workspacePath(uriOrPath: string): string {
 		return decodeURIComponent(new URL(uriOrPath).pathname).replace(/^\//, '');
 	}
 	return uriOrPath.replace(/^\//, '');
+}
+
+/** Whether `path` currently exists in `fs` (`false` rather than throwing when it's absent). */
+async function pathExists(fs: Workspace['fs'], path: string): Promise<boolean> {
+	try {
+		await fs.stat(path);
+		return true;
+	} catch (err) {
+		if (err instanceof NotFoundError) return false;
+		throw err;
+	}
 }
 
 /**
@@ -56,6 +67,7 @@ export async function listWorkspaceFiles(
 export class WorkspaceState implements IDisposable {
 	#workspace: Workspace;
 	#cleanups: (() => void)[] = [];
+	#refreshing: Promise<void> | undefined;
 
 	/** All file paths in the workspace (sorted), kept fresh via `fs.watch`. */
 	files: string[] = $state([]);
@@ -82,9 +94,16 @@ export class WorkspaceState implements IDisposable {
 		return this.#workspace;
 	}
 
-	/** Re-reads the file list from the filesystem. */
+	/** Re-reads the file list from the filesystem. Concurrent calls share one scan. */
 	async refresh(): Promise<void> {
-		this.files = await listWorkspaceFiles(this.#workspace.fs);
+		this.#refreshing ??= listWorkspaceFiles(this.#workspace.fs)
+			.then((files) => {
+				this.files = files;
+			})
+			.finally(() => {
+				this.#refreshing = undefined;
+			});
+		return this.#refreshing;
 	}
 
 	/** Opens a file by pushing it onto the workspace history. */
@@ -93,6 +112,69 @@ export class WorkspaceState implements IDisposable {
 			this.#workspace.history.push(path);
 		}
 		this.current = path;
+	}
+
+	/**
+	 * Creates a new file (and any missing parent directories), then opens it.
+	 * Throws if `path` already exists — use `workspace.fs.writeFile` directly
+	 * to overwrite intentionally.
+	 */
+	async create(path: string, content: string = ''): Promise<void> {
+		const target = workspacePath(path);
+		const fs = this.#workspace.fs;
+		const slashIndex = target.lastIndexOf('/');
+		const dir = slashIndex === -1 ? '' : target.slice(0, slashIndex);
+
+		// independent checks — run them concurrently instead of round-tripping twice
+		const [targetExists, dirExists] = await Promise.all([
+			pathExists(fs, target),
+			dir ? pathExists(fs, dir) : Promise.resolve(true)
+		]);
+		if (targetExists) throw new Error(`File already exists: ${target}`);
+		if (dir && !dirExists) await fs.createDirectory(dir);
+
+		await fs.writeFile(target, content);
+		this.open(target);
+	}
+
+	/**
+	 * Renames/moves a file, fixing up `current` and `workspace.history` in
+	 * place when the renamed file is the one currently open.
+	 */
+	async rename(
+		oldPath: string,
+		newPath: string,
+		options: { overwrite?: boolean } = {}
+	): Promise<void> {
+		const from = workspacePath(oldPath);
+		const to = workspacePath(newPath);
+		await this.#workspace.fs.rename(from, to, { overwrite: options.overwrite ?? false });
+
+		if (from === this.current) {
+			this.current = to;
+			this.#workspace.history.replace(to);
+		}
+	}
+
+	/**
+	 * Deletes a file (or, with `recursive`, a directory). If it was the open
+	 * file, `current` moves to wherever `workspace.history.back()` lands (if
+	 * that file still exists) or otherwise the first remaining file.
+	 */
+	async remove(path: string, options: { recursive?: boolean } = {}): Promise<void> {
+		const target = workspacePath(path);
+		await this.#workspace.fs.delete(target, { recursive: options.recursive ?? false });
+		if (target !== this.current) return;
+
+		const history = this.#workspace.history;
+		history.back();
+		await this.refresh();
+
+		const backTarget = workspacePath(history.state.current ?? '');
+		this.current =
+			backTarget && backTarget !== target && this.files.includes(backTarget)
+				? backTarget
+				: this.files[0];
 	}
 
 	dispose(): void {
