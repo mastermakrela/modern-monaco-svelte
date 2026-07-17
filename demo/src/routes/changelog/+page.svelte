@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { MarkdownEditor } from 'modern-monaco-svelte';
 	import { ui } from '$lib/ui.svelte.js';
-
-	let { data } = $props();
+	import changelog from '../../../../CHANGELOG.md?raw';
 </script>
 
 <section>
 	<h2>Changelog</h2>
 	<MarkdownEditor
-		value={data.changelog}
+		value={changelog}
 		options={{ readOnly: true }}
 		dark={ui.dark}
 		class="editor"

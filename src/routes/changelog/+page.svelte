@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { MarkdownEditor } from '$lib/index.js';
-
-	let { data } = $props();
+	import changelog from '../../../CHANGELOG.md?raw';
 </script>
 
 <main>
@@ -11,7 +10,7 @@
 		<a href={resolve('/')}>← init mode demo</a>
 	</header>
 
-	<MarkdownEditor value={data.changelog} options={{ readOnly: true }} class="demo-editor">
+	<MarkdownEditor value={changelog} options={{ readOnly: true }} class="demo-editor">
 		{#snippet loading()}
 			<p class="loading">Loading…</p>
 		{/snippet}
