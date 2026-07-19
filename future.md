@@ -1,19 +1,25 @@
-# Future / deferred from v1
+# Blocked on upstream
 
-Items deliberately out of scope for the first version.
+Everything else originally tracked here shipped by 0.5.0. These three remain
+open only because upstream `modern-monaco` (0.4.2) doesn't expose the needed
+API yet — revisit each when it does.
 
-## TODO
-
-- [x] **`lazy()` / SSR mode component** — done in 0.1.0: `LazyMonacoEditor` + `modern-monaco-svelte/ssr` (`renderEditor` / `renderMarkdownEditor`) + `ensureLazyEditor()`.
 - [ ] **Lazy-mode editor handle** — upstream's `<monaco-editor>` element keeps the created editor instance private (no property, no event), so `LazyMonacoEditor` cannot offer `bind:value`, theme switching, or `onready`. If upstream exposes the instance (or an event), add them.
-- [x] **`Workspace` / multi-file support** — done in 0.2.0: `workspace`/`file`/`followHistory` props on `MonacoEditor`/`MarkdownEditor` (reactive model switching with view-state restore), `WorkspaceState` reactive helper, `listWorkspaceFiles`, `workspacePath`.
-- [ ] **Workspace write helpers** — `WorkspaceState` is read/navigation-focused; conveniences like `create`/`rename`/`delete` with conflict handling (and updating open editors when the current file is renamed/deleted) are still open.
-- [x] **Theme pair convenience** — done in 0.3.0: `themeLight`/`themeDark` props with live `prefers-color-scheme` detection as the default on all three editors (explicit `theme` still wins).
-- [x] **Pluggable color-scheme source** — `dark` prop on `MonacoEditor`/`MarkdownEditor` lets apps drive the light/dark choice from their own state (mode-watcher, user toggle) instead of `prefers-color-scheme`; `prefers-color-scheme` stays the default when `dark` is `undefined`.
-- [x] **Non-destructive external value push** — external `value` changes apply via an undoable full-range edit (bracketed by undo stops) with view-state restore, instead of `setValue()`, so the undo stack and cursor survive a mid-edit rewrite (e.g. SvelteKit single-flight query refresh).
-- [ ] **SSR color-scheme hint** — `renderEditor()`/`renderMarkdownEditor()` bake one theme server-side; respecting the client preference there would need the `Sec-CH-Prefers-Color-Scheme` client hint (or a cookie) plus a recipe. Lazy mode also cannot re-theme after hydration (see lazy-mode editor handle above).
 - [ ] **On-demand theme loading** — modern-monaco's patched `monaco.editor.setTheme()` only knows themes registered at `init()` time (`initShikiMonacoTokenizer` warns "Theme not found" otherwise). The internal highlighter has `loadThemeFromCDN()` but it isn't exposed publicly. If upstream exposes it, lift the "declare all themes upfront" restriction.
-- [x] **Diff editor** — done: `MonacoDiffEditor` wraps `monaco.editor.createDiffEditor`. Supports both string sources (`original`/`modified`) and workspace files (`originalFile`/`modifiedFile`), per-side mixable; `readOnly` (default true) preview with optional editable modified side (`bind:modified`); shares the theme machinery.
 - [ ] **Multi-file diff** — upstream exposes `monaco.editor.createMultiFileDiffEditor(domElement, override)`, but it's typed `: any` and immature (no options/model surface). Revisit when upstream firms it up; a `MultiFileDiffEditor` could diff two workspace revisions.
-- [x] **Completion suggest-widget browser test** — done: `src/tests/browser/MarkdownCompletions.svelte.test.ts` drives the real suggest widget (click `.view-lines` to focus, real keyboard input, poll for `.suggest-widget .monaco-list-row`, accept via Enter or a row click).
-- [ ] **`modern-monaco/core` variant** — optional slimmer entry that skips built-in LSP/grammars for bundle-size-sensitive consumers.
+
+## Demo & showcase backlog
+
+Shipped: the whole backlog below landed in the demo-app overhaul (grouped
+sidebar nav, redesigned landing page with a demo index, Svelte-orange accent,
+persisted dark/light toggle, and `data-sveltekit-reload` boundaries for every
+page that needs its own modern-monaco init).
+
+- [x] **Edit history visualization** — the workspace demo now shows a clickable visited-file trail with back/forward (reconstructed locally from `history.onChange`; the upstream API only exposes `state.current`, no list/index).
+- [x] **VS Code window API demo** — workspace demo's create/rename/remove flows use `workspace.showInputBox` (with validation) and `showQuickPick` (delete confirm), plus a "Go to file…" quick pick. Note: Monaco's quick-input service needs a focused editor — the page focuses the bound editor before each prompt.
+- [x] **Lazy/SSR mode in the public demo app** — `/lazy` ports the internal dev route; the SSR markup is baked in at prerender time (build passes `fontFamily` since there's no user-agent at prerender).
+- [x] **Live theme switcher** — `/themes`, 12 curated Shiki themes registered via the `themes` prop, plus a disabled "not registered" entry demonstrating the init-time constraint.
+- [x] **"Editing evolved" showcase** — `/intellisense`: 3-file TS workspace, go-to-def/peek/rename/quick-fix + sticky scroll, minimap, bracket colorization, folding. Caveat: upstream 0.4.2 never registers its inlay-hints/CodeLens providers (adapters exist but are unwired), so those options are enabled but inert — noted on the page; revisit with the upstream items above.
+- [x] **Multi-cursor & refactor-aware editing demo** — `/multi-cursor`: `linkedEditing`, `occurrencesHighlight: 'multiFile'`, `parameterHints`, and a live `multiCursorModifier` toggle.
+- [x] **Visual aids demo** — `/visual-aids`: color decorators, `unicodeHighlight` with a real Trojan Source sample (homoglyph, zero-width space, RLO/PDI bidi override, written as `\u` escapes in source), bracket/indent guides.
+- [x] **Editing conveniences demo** — `/conveniences`: `dragAndDrop`, `wordBasedSuggestions: 'currentDocument'`, and format-on-paste/type via `lsp.formatting`.
