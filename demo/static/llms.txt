@@ -1,0 +1,36 @@
+# modern-monaco-svelte
+
+> Svelte 5 components for [modern-monaco](https://github.com/esm-dev/modern-monaco): drop-in Monaco and markdown editors with Shiki highlighting, multi-file workspaces (IndexedDB), lazy loading, and SSR. This site is the live demo; the package is `modern-monaco-svelte` on npm.
+
+Install: `npm i modern-monaco-svelte modern-monaco` (peer dependency: Svelte ^5).
+
+Key facts for coding agents:
+
+- Components: `MonacoEditor`, `MarkdownEditor`, `MonacoDiffEditor`, `LazyMonacoEditor`; entry points `modern-monaco-svelte`, `modern-monaco-svelte/ssr` (server-side `renderEditor`/`renderMarkdownEditor`), `modern-monaco-svelte/core` (slim, bring-your-own grammars/themes).
+- modern-monaco's `init()` is page-global: themes, langs, LSP config, and the workspace must be registered before the first editor on the page mounts (use `preloadMonaco()`); later options are ignored with a console warning.
+- `monaco.editor.setTheme()` can only switch to themes registered at init time.
+- Workspaces are IndexedDB-backed and browser-only; `WorkspaceState` is the reactive file-explorer helper.
+- Editors support `bind:value`, reactive `theme`/`dark` props, and a `loading` snippet.
+
+## Docs
+
+- [README, the full usage documentation](https://raw.githubusercontent.com/mastermakrela/modern-monaco-svelte/main/README.md)
+- [Changelog](https://raw.githubusercontent.com/mastermakrela/modern-monaco-svelte/main/CHANGELOG.md)
+- [Source on GitHub](https://github.com/mastermakrela/modern-monaco-svelte)
+- [npm package](https://www.npmjs.com/package/modern-monaco-svelte)
+- [Upstream modern-monaco](https://github.com/esm-dev/modern-monaco)
+
+## Demo pages
+
+- [Markdown & code editors](https://mastermakrela.github.io/modern-monaco-svelte/): two-way binding, markdown shortcuts, read-only code blocks
+- [Diff](https://mastermakrela.github.io/modern-monaco-svelte/diff): side-by-side and unified diff editor
+- [Theme switcher](https://mastermakrela.github.io/modern-monaco-svelte/themes): live switching across 12 pre-registered Shiki themes
+- [Multi-file workspace](https://mastermakrela.github.io/modern-monaco-svelte/workspace): file explorer, history trail, VS Code-style prompts
+- [Workspace from DB rows](https://mastermakrela.github.io/modern-monaco-svelte/workspace-rows): two-way JSON sync into a workspace
+- [IntelliSense](https://mastermakrela.github.io/modern-monaco-svelte/intellisense): cross-file go-to-definition, rename, quick fixes via the built-in LSP
+- [Multi-cursor](https://mastermakrela.github.io/modern-monaco-svelte/multi-cursor): linked tag editing, multi-file occurrence highlighting, signature help
+- [Visual aids](https://mastermakrela.github.io/modern-monaco-svelte/visual-aids): color decorators, Trojan Source unicode highlighting, bracket guides
+- [Conveniences](https://mastermakrela.github.io/modern-monaco-svelte/conveniences): drag-and-drop text, word-based suggestions, format on paste/type
+- [Lazy + SSR](https://mastermakrela.github.io/modern-monaco-svelte/lazy): prerendered Shiki markup hydrating into a live editor
+- [modern-monaco/core](https://mastermakrela.github.io/modern-monaco-svelte/core): the slim entry point with self-registered syntax/theme
+- [Changelog](https://mastermakrela.github.io/modern-monaco-svelte/changelog)

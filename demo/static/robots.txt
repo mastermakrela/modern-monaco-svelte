@@ -1,0 +1,11 @@
+# modern-monaco-svelte demo - a public showcase site.
+# All crawlers and AI agents are welcome.
+
+User-agent: *
+Allow: /
+
+# Content Signals (https://contentsignals.org/): this demo may be searched,
+# used as AI input, and used for AI training.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+
+Sitemap: https://mastermakrela.github.io/modern-monaco-svelte/sitemap.xml
