@@ -1,4 +1,4 @@
-import { allNavLinks, SITE_URL } from '$lib/nav.js';
+import { allNavLinks, SITE_URL } from '#lib/nav.js';
 
 // Generated at build time (adapter-static) from the same nav list the
 // sidebar renders, so it can't drift from the actual pages.

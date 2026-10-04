@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { LazyMonacoEditor } from '$lib/index.js';
+	import { LazyMonacoEditor } from '#lib/index.js';
 
 	let { data } = $props();
 </script>

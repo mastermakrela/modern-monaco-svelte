@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { resolve } from '$app/paths';
-	import { MonacoEditor, WorkspaceState } from '$lib/index.js';
+	import { MonacoEditor, WorkspaceState } from '#lib/index.js';
 	import { Workspace } from 'modern-monaco';
 
 	interface DbRow {
@@ -130,7 +130,7 @@
 <main>
 	<header>
 		<h1>Workspace from DB rows</h1>
-		<a href={resolve('/workspace')}>← workspace demo</a>
+		<a href={resolve('workspace')}>← workspace demo</a>
 	</header>
 
 	<p>

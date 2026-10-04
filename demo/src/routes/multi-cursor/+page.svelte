@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { MonacoEditor, WorkspaceState } from 'modern-monaco-svelte';
 	import { Workspace } from 'modern-monaco';
 	import type { EditorOptions } from 'modern-monaco-svelte';
-	import { ui } from '$lib/ui.svelte.js';
+	import { ui } from '#lib/ui.svelte.js';
 
 	// Distinct IndexedDB name from every other demo workspace.
 	const workspace = browser

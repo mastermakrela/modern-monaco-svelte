@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MonacoEditor } from 'modern-monaco-svelte';
 	import type { InitOptions } from 'modern-monaco-svelte';
-	import { ui } from '$lib/ui.svelte.js';
+	import { ui } from '#lib/ui.svelte.js';
 
 	let dragList = $state(
 		[

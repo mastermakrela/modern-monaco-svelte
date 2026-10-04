@@ -1,5 +1,5 @@
-import { renderMarkdownEditor, resolveServerColorScheme } from '$lib/ssr.js';
-import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME } from '$lib/theme.svelte.js';
+import { renderMarkdownEditor, resolveServerColorScheme } from '#lib/ssr.js';
+import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME } from '#lib/theme.svelte.js';
 import type { PageServerLoad } from './$types.js';
 
 const code = [

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { resolve } from '$app/paths';
-	import { MonacoEditor, WorkspaceState } from '$lib/index.js';
+	import { MonacoEditor, WorkspaceState } from '#lib/index.js';
 	import { Workspace } from 'modern-monaco';
 
 	// Workspaces live in IndexedDB — client-only. Files persist across reloads;
@@ -39,7 +39,7 @@
 	<header>
 		<h1>Workspace / multi-file demo</h1>
 		<nav>
-			<a href={resolve('/workspace-rows')}>workspace from DB rows →</a>
+			<a href={resolve('workspace-rows')}>workspace from DB rows →</a>
 			<a href={resolve('/')}>← init mode demo</a>
 		</nav>
 	</header>

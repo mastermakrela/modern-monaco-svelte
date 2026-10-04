@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 
 /**
  * The `Sec-CH-Prefers-Color-Scheme` client hint is opt-in: the browser only

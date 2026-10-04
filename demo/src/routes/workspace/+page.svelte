@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { MonacoEditor, WorkspaceState, type MonacoCodeEditor } from 'modern-monaco-svelte';
 	import { Workspace } from 'modern-monaco';
-	import { ui } from '$lib/ui.svelte.js';
+	import { ui } from '#lib/ui.svelte.js';
 
 	// Monaco's quick-input service (behind showInputBox/showQuickPick) needs a
 	// focused editor; clicking a page button steals focus, so refocus first.
