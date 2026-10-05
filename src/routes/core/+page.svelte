@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { preloadMonacoCore, registerSyntax, registerTheme } from '#lib/core.js';
-	import type { MonacoCodeEditor } from '#lib/types.js';
+	import { preloadMonacoCore, registerSyntax, registerTheme } from '../../lib/core.js';
+	import type { MonacoCodeEditor } from '../../lib/types.js';
 	import type { TextmateGrammar, TextmateTheme } from 'modern-monaco';
 
 	// A hand-written grammar/theme pair — no CDN fetch, no bundled grammars.

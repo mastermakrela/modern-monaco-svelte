@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { MarkdownEditor } from '#lib/index.js';
+	import { MarkdownEditor } from '../lib/index.js';
 
 	let value = $state(
 		[

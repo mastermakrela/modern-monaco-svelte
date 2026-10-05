@@ -91,9 +91,5 @@
 		"editor",
 		"shiki",
 		"code-editor"
-	],
-	"imports": {
-		"#lib": "./src/lib/index.js",
-		"#lib/*": "./src/lib/*"
-	}
+	]
 }

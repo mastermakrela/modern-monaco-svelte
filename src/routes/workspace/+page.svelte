@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/env';
 	import { resolve } from '$app/paths';
-	import { MonacoEditor, WorkspaceState } from '#lib/index.js';
+	import { MonacoEditor, WorkspaceState } from '../../lib/index.js';
 	import { Workspace } from 'modern-monaco';
 
 	// Workspaces live in IndexedDB — client-only. Files persist across reloads;
