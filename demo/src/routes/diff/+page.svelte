@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { MonacoDiffEditor } from 'modern-monaco-svelte';
-	import { ui } from '$lib/ui.svelte.js';
+	import { ui } from '#lib/ui.svelte.js';
 
 	// A small one-line fix: a typo in the returned string.
 	const codeOriginal = [

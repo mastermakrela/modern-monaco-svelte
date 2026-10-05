@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 /**
  * Shared dark/light choice, driven by the toggle in the layout and passed to

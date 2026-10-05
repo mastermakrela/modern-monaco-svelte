@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { assets, resolve } from '$app/paths';
+	import { asset, resolve } from '$app/paths';
 	// Nav structure (incl. which pages force full reloads and why) lives in
-	// $lib/nav.ts, shared with the generated /sitemap.xml.
-	import { navGroups as groups, allNavLinks as allLinks } from '$lib/nav.js';
-	import { ui } from '$lib/ui.svelte.js';
+	// #lib/nav.ts, shared with the generated /sitemap.xml.
+	import { navGroups as groups, allNavLinks as allLinks } from '#lib/nav.js';
+	import { ui } from '#lib/ui.svelte.js';
 
 	let { children } = $props();
 	// Leaving a reload page must also reload (its engine state can't survive
@@ -15,8 +15,8 @@
 
 	let menuOpen = $state(false);
 
-	// A static asset, not a route — assets-relative, so resolve() doesn't apply.
-	const llmsTxtHref = `${assets}/llms.txt`;
+	// A static asset, not a route — assets-relative, so asset() rather than resolve().
+	const llmsTxtHref = asset('llms.txt');
 </script>
 
 <div class="app" class:dark={ui.dark}>

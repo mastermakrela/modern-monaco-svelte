@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { MarkdownEditor, MonacoEditor } from 'modern-monaco-svelte';
-	import { ui } from '$lib/ui.svelte.js';
+	import { ui } from '#lib/ui.svelte.js';
 
 	let markdown = $state(
 		[

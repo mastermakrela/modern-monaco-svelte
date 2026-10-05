@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { MarkdownEditor } from 'modern-monaco-svelte';
-	import { ui } from '$lib/ui.svelte.js';
+	import { ui } from '#lib/ui.svelte.js';
 	import changelog from '../../../../CHANGELOG.md?raw';
 </script>
 
