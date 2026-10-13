@@ -8,13 +8,17 @@
 <script lang="ts">
 	import type { Workspace } from 'modern-monaco';
 	import { onMount, type Snippet, untrack } from 'svelte';
-	import { attachWorkspace, preloadMonaco } from './monaco.js';
+	import {
+		applyExternalValue,
+		attachWorkspace,
+		editorInitOptions,
+		preloadMonaco
+	} from './monaco.js';
 	import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME, resolveTheme } from './theme.svelte.js';
 	import type {
 		DiffEditorOptions,
 		InitOptions,
 		Monaco,
-		MonacoCodeEditor,
 		MonacoDiffEditorInstance
 	} from './types.js';
 
@@ -127,16 +131,9 @@
 		const disposables: { dispose(): void }[] = [];
 
 		(async () => {
-			const initOptions: InitOptions = { ...init };
-			const allThemes = [
-				...(theme ? [theme] : [themeLight, themeDark]),
-				...themes,
-				...(init?.themes ?? [])
-			];
-			if (allThemes.length > 0) initOptions.themes = allThemes;
-			if (workspace) initOptions.workspace = workspace;
-
-			const m = await preloadMonaco(initOptions);
+			const m = await preloadMonaco(
+				editorInitOptions({ theme, themeLight, themeDark, themes, init, workspace })
+			);
 			if (disposed || !container) return;
 			if (workspace) attachWorkspace(workspace, m);
 			monaco = m;
@@ -254,16 +251,6 @@
 			applyExternalValue(ed.getModifiedEditor(), next);
 		}
 	});
-
-	function applyExternalValue(ed: MonacoCodeEditor, next: string) {
-		const model = ed.getModel();
-		if (!model) return;
-		const viewState = ed.saveViewState();
-		ed.pushUndoStop();
-		ed.executeEdits('external', [{ range: model.getFullModelRange(), text: next }]);
-		ed.pushUndoStop();
-		if (viewState) ed.restoreViewState(viewState);
-	}
 
 	// Reactive theme switching (explicit prop or live prefers-color-scheme).
 	$effect(() => {

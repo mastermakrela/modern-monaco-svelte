@@ -1,6 +1,6 @@
 import type { Workspace } from 'modern-monaco';
 import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME } from './theme.svelte.js';
-import type { InitOptions, Monaco } from './types.js';
+import type { InitOptions, Monaco, MonacoCodeEditor } from './types.js';
 
 /**
  * Merges init options from multiple callers. `themes` and `langs` are
@@ -50,6 +50,54 @@ interface AppliedState {
 	themes: Set<string>;
 	langs: Set<string>;
 	options: InitOptions;
+}
+
+/**
+ * Init options for an init-mode editor: `init` plus the themes the editor can
+ * switch between (the explicit `theme`, or the light/dark pair when following
+ * prefers-color-scheme) and its workspace.
+ */
+export function editorInitOptions({
+	theme,
+	themeLight,
+	themeDark,
+	themes,
+	init,
+	workspace
+}: {
+	theme: string | undefined;
+	themeLight: string;
+	themeDark: string;
+	themes: string[];
+	init: InitOptions | undefined;
+	workspace: Workspace | undefined;
+}): InitOptions {
+	const options: InitOptions = { ...init };
+	const allThemes = [
+		...(theme ? [theme] : [themeLight, themeDark]),
+		...themes,
+		...(init?.themes ?? [])
+	];
+	if (allThemes.length > 0) options.themes = allThemes;
+	if (workspace) options.workspace = workspace;
+	return options;
+}
+
+/**
+ * Pushes an externally changed value into the editor as an undoable edit, so
+ * the undo stack and cursor/scroll survive (unlike `setValue`, which resets
+ * the undo history and snaps the cursor to the top).
+ */
+export function applyExternalValue(editor: MonacoCodeEditor, next: string): void {
+	const model = editor.getModel();
+	if (!model) return;
+	const viewState = editor.saveViewState();
+	// bracket the replacement in its own undo stop so the user can undo just
+	// the external change (and undo past it into their own edit history)
+	editor.pushUndoStop();
+	editor.executeEdits('external', [{ range: model.getFullModelRange(), text: next }]);
+	editor.pushUndoStop();
+	if (viewState) editor.restoreViewState(viewState);
 }
 
 /** Workspaces already wired to a monaco instance (via init or attachWorkspace). */
