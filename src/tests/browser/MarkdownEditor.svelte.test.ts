@@ -41,6 +41,20 @@ describe('MarkdownEditor', () => {
 		expect(editor.getValue()).toBe('hello');
 	});
 
+	it('toggles bold over a multi-line selection and keeps it selected', async () => {
+		const { host } = renderHost({ initial: 'one\ntwo' });
+		const editor = await waitForEditor(host);
+
+		editor.setSelection({ startLineNumber: 1, startColumn: 1, endLineNumber: 2, endColumn: 4 });
+		await editor.getAction('markdown-bold')!.run();
+		expect(editor.getValue()).toBe('**one\ntwo**');
+		expect(editor.getModel()!.getValueInRange(editor.getSelection()!)).toBe('one\ntwo');
+
+		await editor.getAction('markdown-bold')!.run();
+		expect(editor.getValue()).toBe('one\ntwo');
+		expect(editor.getModel()!.getValueInRange(editor.getSelection()!)).toBe('one\ntwo');
+	});
+
 	it('wraps the selection as a link with the url placeholder selected', async () => {
 		const { host } = renderHost({ initial: 'click' });
 		const editor = await waitForEditor(host);
