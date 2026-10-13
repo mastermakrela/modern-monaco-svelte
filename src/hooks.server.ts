@@ -16,5 +16,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 	response.headers.set('Accept-CH', CLIENT_HINTS);
 	response.headers.set('Critical-CH', CLIENT_HINTS);
+	// the HTML differs per hint value, so caches must key on it
+	response.headers.append('Vary', CLIENT_HINTS);
 	return response;
 };
