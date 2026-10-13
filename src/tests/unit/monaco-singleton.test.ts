@@ -84,6 +84,16 @@ describe('preloadMonaco', () => {
 		expect(warn).not.toHaveBeenCalled();
 	});
 
+	it('retries on the next call after init fails', async () => {
+		const { preloadMonaco } = await loadModule();
+		initMock.mockRejectedValueOnce(new Error('theme fetch failed'));
+
+		await expect(preloadMonaco()).rejects.toThrow('theme fetch failed');
+		await expect(preloadMonaco({ themes: ['rose-pine-dawn'] })).resolves.toBeDefined();
+
+		expect(initMock).toHaveBeenCalledTimes(2);
+	});
+
 	it('stays silent when late options are already covered by init', async () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const { preloadMonaco } = await loadModule();

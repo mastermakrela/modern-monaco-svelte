@@ -215,7 +215,14 @@ function createInitSingleton<T>(
 				if (merged.workspace) attachedWorkspaces.add(merged.workspace);
 
 				return run(mod, merged);
-			})();
+			})().catch((error) => {
+				// don't cache the failure: the next mount retries instead of every editor
+				// on the page staying broken until a full reload
+				promise = null;
+				committedVariant = null;
+				applied = null;
+				throw error;
+			});
 		}
 		return promise;
 	};
