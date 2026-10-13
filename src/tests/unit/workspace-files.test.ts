@@ -1,5 +1,6 @@
+import type { Workspace } from 'modern-monaco';
 import { describe, expect, it } from 'vitest';
-import { listWorkspaceFiles, workspacePath } from '../../lib/workspace.svelte.js';
+import { listWorkspaceFiles, WorkspaceState, workspacePath } from '../../lib/workspace.svelte.js';
 
 describe('workspacePath', () => {
 	it('strips file:/// URIs to bare paths', () => {
@@ -66,5 +67,28 @@ describe('listWorkspaceFiles', () => {
 
 	it('returns an empty list for an empty workspace', async () => {
 		expect(await listWorkspaceFiles(mockFs({}))).toEqual([]);
+	});
+});
+
+describe('WorkspaceState.refresh', () => {
+	it('rescans when a change lands while a scan is already running', async () => {
+		const names = ['a.md'];
+		// like IndexedDB: the directory is read now, the result arrives later
+		const readDirectory = async () => {
+			const snapshot = names.map((name): [string, number] => [name, FILE]);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			return snapshot;
+		};
+		// the fake covers only what WorkspaceState touches
+		const workspace = {
+			history: { state: { current: '' }, onChange: () => () => {} },
+			fs: { readDirectory, watch: () => () => {} }
+		} as unknown as Workspace;
+
+		const state = new WorkspaceState(workspace); // starts the first scan
+		names.push('b.md'); // created after that scan read the directory
+		await state.refresh();
+
+		expect(state.files).toEqual(['a.md', 'b.md']);
 	});
 });

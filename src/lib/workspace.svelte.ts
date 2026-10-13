@@ -68,6 +68,7 @@ export class WorkspaceState implements IDisposable {
 	#workspace: Workspace;
 	#cleanups: (() => void)[] = [];
 	#refreshing: Promise<void> | undefined;
+	#rescan = false;
 
 	/** All file paths in the workspace (sorted), kept fresh via `fs.watch`. */
 	files: string[] = $state([]);
@@ -94,16 +95,26 @@ export class WorkspaceState implements IDisposable {
 		return this.#workspace;
 	}
 
-	/** Re-reads the file list from the filesystem. Concurrent calls share one scan. */
-	async refresh(): Promise<void> {
-		this.#refreshing ??= listWorkspaceFiles(this.#workspace.fs)
-			.then((files) => {
-				this.files = files;
-			})
-			.finally(() => {
+	/**
+	 * Re-reads the file list from the filesystem. Concurrent calls share one
+	 * loop; a call that lands mid-scan makes it scan once more, so a change
+	 * made after the running scan read the directory is never missed.
+	 */
+	refresh(): Promise<void> {
+		if (this.#refreshing) {
+			this.#rescan = true;
+			return this.#refreshing;
+		}
+		return (this.#refreshing = (async () => {
+			try {
+				do {
+					this.#rescan = false;
+					this.files = await listWorkspaceFiles(this.#workspace.fs);
+				} while (this.#rescan);
+			} finally {
 				this.#refreshing = undefined;
-			});
-		return this.#refreshing;
+			}
+		})());
 	}
 
 	/** Opens a file by pushing it onto the workspace history. */
