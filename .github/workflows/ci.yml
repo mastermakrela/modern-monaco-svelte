@@ -16,10 +16,20 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # the demo is deployed to Pages by a build that doesn't type-check, and root
+      # svelte-check loads demo/svelte.config.js — so install and check it here too
+      - name: Install demo dependencies
+        working-directory: demo
+        run: bun install --frozen-lockfile
+
       - name: Lint
         run: bun run lint
 
       - name: Type check
+        run: bun run check
+
+      - name: Type check demo
+        working-directory: demo
         run: bun run check
 
       - name: Unit tests

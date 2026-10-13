@@ -1,7 +1,12 @@
 <script lang="ts">
 	import type { Workspace } from 'modern-monaco';
 	import { onMount, type Snippet } from 'svelte';
-	import { attachWorkspace, preloadMonaco } from './monaco.js';
+	import {
+		applyExternalValue,
+		attachWorkspace,
+		editorInitOptions,
+		preloadMonaco
+	} from './monaco.js';
 	import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME, resolveTheme } from './theme.svelte.js';
 	import { workspacePath } from './workspace.svelte.js';
 	import type { EditorOptions, InitOptions, Monaco, MonacoCodeEditor } from './types.js';
@@ -107,18 +112,9 @@
 		const disposables: { dispose(): void }[] = [];
 
 		(async () => {
-			const initOptions: InitOptions = { ...init };
-			// without an explicit theme, register the light/dark pair so the
-			// editor can follow prefers-color-scheme changes
-			const allThemes = [
-				...(theme ? [theme] : [themeLight, themeDark]),
-				...themes,
-				...(init?.themes ?? [])
-			];
-			if (allThemes.length > 0) initOptions.themes = allThemes;
-			if (workspace) initOptions.workspace = workspace;
-
-			const m = await preloadMonaco(initOptions);
+			const m = await preloadMonaco(
+				editorInitOptions({ theme, themeLight, themeDark, themes, init, workspace })
+			);
 			if (disposed || !container) return;
 			// wires the workspace even when init already ran without it
 			// (e.g. this editor mounted after SPA navigation)
@@ -257,18 +253,6 @@
 			applyExternalValue(editor, next);
 		}
 	});
-
-	function applyExternalValue(ed: MonacoCodeEditor, next: string) {
-		const model = ed.getModel();
-		if (!model) return;
-		const viewState = ed.saveViewState();
-		// bracket the replacement in its own undo stop so the user can undo just
-		// the external change (and undo past it into their own edit history)
-		ed.pushUndoStop();
-		ed.executeEdits('external', [{ range: model.getFullModelRange(), text: next }]);
-		ed.pushUndoStop();
-		if (viewState) ed.restoreViewState(viewState);
-	}
 
 	// Reactive construction options applied live (e.g. toggling
 	// `readOnly` to use the editor as a syntax-highlighted code block).

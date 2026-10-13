@@ -1,5 +1,24 @@
 import type { IDisposable, Monaco, MonacoCodeEditor } from '../types.js';
 
+/** Selects `length` characters from `start`, across lines when the text spans them. */
+function selectText(
+	editor: MonacoCodeEditor,
+	start: { lineNumber: number; column: number },
+	length: number
+): void {
+	const model = editor.getModel();
+	if (!model) return;
+	const offset = model.getOffsetAt(start);
+	const from = model.getPositionAt(offset);
+	const to = model.getPositionAt(offset + length);
+	editor.setSelection({
+		startLineNumber: from.lineNumber,
+		startColumn: from.column,
+		endLineNumber: to.lineNumber,
+		endColumn: to.column
+	});
+}
+
 /**
  * Toggle-wraps the current selection with `before`/`after` markers.
  * If already wrapped (inside the selection or directly around it), unwraps.
@@ -23,13 +42,7 @@ export function wrapSelection(editor: MonacoCodeEditor, before: string, after: s
 			editor.executeEdits('markdown-helper', [
 				{ range: selection, text: unwrapped, forceMoveMarkers: true }
 			]);
-			const startPos = selection.getStartPosition();
-			editor.setSelection({
-				startLineNumber: startPos.lineNumber,
-				startColumn: startPos.column,
-				endLineNumber: startPos.lineNumber,
-				endColumn: startPos.column + unwrapped.length
-			});
+			selectText(editor, selection.getStartPosition(), unwrapped.length);
 		} else {
 			// Check whether the text surrounding the selection already has the markers
 			const startPos = selection.getStartPosition();
@@ -65,24 +78,22 @@ export function wrapSelection(editor: MonacoCodeEditor, before: string, after: s
 						forceMoveMarkers: true
 					}
 				]);
-				editor.setSelection({
-					startLineNumber: beforeRange.startLineNumber,
-					startColumn: beforeRange.startColumn,
-					endLineNumber: beforeRange.startLineNumber,
-					endColumn: beforeRange.startColumn + selectedText.length
-				});
+				selectText(
+					editor,
+					{ lineNumber: beforeRange.startLineNumber, column: beforeRange.startColumn },
+					selectedText.length
+				);
 			} else {
 				// Wrap the selection
 				editor.executeEdits('markdown-helper', [
 					{ range: selection, text: before + selectedText + after, forceMoveMarkers: true }
 				]);
 				// Select just the text between the markers
-				editor.setSelection({
-					startLineNumber: startPos.lineNumber,
-					startColumn: startPos.column + before.length,
-					endLineNumber: endPos.lineNumber,
-					endColumn: endPos.column + before.length
-				});
+				selectText(
+					editor,
+					{ lineNumber: startPos.lineNumber, column: startPos.column + before.length },
+					selectedText.length
+				);
 			}
 		}
 	} else {
