@@ -36,6 +36,7 @@
 	// Workspaces live in IndexedDB — client-only. Files persist across reloads;
 	// initialFiles only seed an empty workspace (a returning row's `content`
 	// may lag behind whatever was left in IndexedDB until you edit it).
+	// svelte-ignore state_referenced_locally
 	const workspace = browser
 		? new Workspace({
 				name: 'modern-monaco-svelte-demo-db-rows',
@@ -47,11 +48,13 @@
 
 	// What we last wrote per uuid, so re-applying identical JSON is a no-op —
 	// only actual creates/renames/deletes/edits touch the filesystem.
+	// svelte-ignore state_referenced_locally
 	let appliedByUuid = new Map(
 		rows.map((row) => [row.uuid, { path: row.name, content: row.content }])
 	);
 
 	let openValue = $state('');
+	// svelte-ignore state_referenced_locally
 	let jsonText = $state(JSON.stringify(rows, null, 2));
 	let jsonFocused = $state(false);
 	let jsonError: string | undefined = $state(undefined);
